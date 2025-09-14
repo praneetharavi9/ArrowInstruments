@@ -1,0 +1,11 @@
+app-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* keeps it above other elements */
+}
+router-outlet {
+  display: block; /* router-outlet is inline by default */
+  margin-top: 100px; /* adjust this to your navbar height */
+}
