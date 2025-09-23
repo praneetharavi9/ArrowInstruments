@@ -1,1 +1,13 @@
-<p>products works!</p>
+<div *ngIf="loading">Loading products...</div>
+
+<div *ngIf="!loading && products.length === 0">
+  No products found.
+</div>
+
+<div *ngIf="!loading && products.length > 0">
+  <div *ngFor="let product of products" class="product-card">
+    <h3>{{ product.name }}</h3>
+    <p>{{ product.description }}</p>
+    <img *ngIf="product.imageUrl" [src]="product.imageUrl" alt="{{ product.name }}" width="150" />
+  </div>
+</div>
