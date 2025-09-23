@@ -8,6 +8,7 @@ import { AppNavbar } from './navbar/navbar';
 import { Contact } from './contact/contact';
 import { Products } from './products/products';
 import { About } from './about/about';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { About } from './about/about';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
   providers: [
     provideBrowserGlobalErrorListeners()
