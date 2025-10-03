@@ -69,3 +69,7 @@ artifacts/
 *.bak
 *.backup
 *.sw*
+
+# Configuration files
+appsettings.json
+appsettings.*.json

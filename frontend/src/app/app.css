@@ -9,3 +9,9 @@ router-outlet {
   display: block; /* router-outlet is inline by default */
   margin-top: 100px; /* adjust this to your navbar height */
 }
+app-footer {
+  display: block;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+}

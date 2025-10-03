@@ -1,0 +1,29 @@
+.product-types {
+  margin: 1rem;
+}
+
+.product-type {
+  margin-bottom: 1rem;
+}
+
+.product-type-header {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+
+.product-type-header .arrow {
+  display: inline-block;
+  width: 1.2rem;
+  text-align: center;
+  margin-right: 0.5rem;
+}
+
+.products-list {
+  margin-left: 1.7rem; /* Indent products under product type */
+}
+
+.product-item {
+  padding: 0.2rem 0;
+}

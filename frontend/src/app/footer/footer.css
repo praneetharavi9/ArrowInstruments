@@ -1,0 +1,24 @@
+  .footer-container h2,
+  h5,
+  p {
+      font-family: 'Abril fatface';
+  }
+
+  .footer-container h5 {
+      color: #f0d0c9;
+  }
+
+  /* Footer icons color */
+  .footer-container i {
+      color: #f0d0c9;
+  }
+
+  .footer-bottom {
+      margin: 0;
+      padding: 8px;
+      width: 100%;
+      background-color: #770202;
+      color: #fff;
+      font-size: 14px;
+      border-top: 1px solid #444;
+  }

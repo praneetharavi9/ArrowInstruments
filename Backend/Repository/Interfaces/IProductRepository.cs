@@ -5,5 +5,6 @@ namespace Backend.Repository.Interfaces
     public interface IProductRepository
     {
         Task<List<Product>> GetAllProducts();
+        Task<List<Product>> GetProductsByProductId(int productTypeId);
     }
 }

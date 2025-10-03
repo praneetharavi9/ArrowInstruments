@@ -18,7 +18,6 @@ body {
   align-items: center;        /* Centers vertically if needed */
   flex-direction: column;     /* Stack children vertically */
   text-align: center;         /* Centers text inside */
-  margin: 50px 0;             /* Optional: spacing top and bottom */
 }
 
 .about-container .tagline h3 {
