@@ -16,12 +16,19 @@ namespace Backend.Controllers
 
         // GET: api/products
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllProducts()
         {
             var products = await _productRepository.GetAllProducts();
             return Ok(products);
         }
 
+        [HttpGet]
+        [Route("GetProductsByProductId/{productTypeId}")]
+        public async Task<IActionResult> GetProductsByProductId(int productTypeId)
+        {
+            var products = await _productRepository.GetProductsByProductId(productTypeId);
+            return Ok(products);
+        }
 
     }
 }

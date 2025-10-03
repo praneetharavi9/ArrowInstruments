@@ -1,0 +1,30 @@
+<div class="dropdown-menu w-100 p-4" aria-labelledby="productsMenu">
+  <div class="container" *ngIf="!loading; else loadingTemplate">
+    <div class="row">
+
+      <!-- Loop through product types -->
+      <div class="col-md-4" *ngFor="let type of productTypes">
+        <h6 class="dropdown-header" (click)="toggleProducts(type)" style="cursor: pointer;">
+          {{ type.name }}
+          <span *ngIf="type.expanded">▲</span>
+          <span *ngIf="!type.expanded">▼</span>
+        </h6>
+
+        <!-- Show products if expanded -->
+        <div *ngIf="type.expanded">
+          <a class="dropdown-item" *ngFor="let product of type.products" [routerLink]="['/products', product.id]">
+            {{ product.name }}
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <ng-template #loadingTemplate>
+    <div class="p-4">
+      <p>Loading product types...</p>
+    </div>
+  </ng-template>
+</div>

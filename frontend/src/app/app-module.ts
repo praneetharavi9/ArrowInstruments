@@ -9,6 +9,8 @@ import { Contact } from './contact/contact';
 import { Products } from './products/products';
 import { About } from './about/about';
 import { HttpClientModule } from '@angular/common/http';
+import { Footer } from './footer/footer';
+import { MegaMenu } from './mega-menu/mega-menu';
 
 @NgModule({
   declarations: [
@@ -17,7 +19,9 @@ import { HttpClientModule } from '@angular/common/http';
     AppNavbar,
     Contact,
     Products,
-    About
+    About,
+    Footer,
+    MegaMenu
   ],
   imports: [
     BrowserModule,

@@ -19,5 +19,12 @@ namespace Backend.Repository
                                  .Where(p => p.IsActive)
                                  .ToListAsync();
         }
+
+        public async Task<List<Product>> GetProductsByProductId(int productTypeId)
+        {
+            return await _context.Products
+                                 .Where(p => p.ProductTypeId == productTypeId && p.IsActive)
+                                 .ToListAsync();
+        }
     }
 }

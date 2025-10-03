@@ -1,16 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { ProductType } from '../models/product-type.model';
 import { Product } from '../models/product.model';
 import { ProductService } from '../services/product';
-import { ProductType } from '../models/product-type.model';
 
 @Component({
-  selector: 'app-products',
+  selector: 'app-mega-menu',
   standalone: false,
-  templateUrl: './products.html',
-  styleUrl: './products.css'
+  templateUrl: './mega-menu.html',
+  styleUrl: './mega-menu.css'
 })
-export class Products implements OnInit {
-
+export class MegaMenu {
   products : Product [] = [];
   loading = true;
   productTypes : ProductType[] = [];
@@ -38,6 +37,7 @@ export class Products implements OnInit {
     this.productService.getAllProductsTypes().subscribe({
       next: data =>{
         this.productTypes = data;
+        this.loading = false;
       }
     });
   }
@@ -52,3 +52,5 @@ export class Products implements OnInit {
     productType.expanded = !productType.expanded;
   }
 }
+
+

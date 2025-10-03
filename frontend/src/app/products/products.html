@@ -1,13 +1,18 @@
-<div *ngIf="loading">Loading products...</div>
+<div class="product-types">
+  <div *ngFor="let type of productTypes" class="product-type">
+    
+    <!-- Arrow + Product Type Name -->
+    <div class="product-type-header" (click)="toggleProducts(type)">
+      <span class="arrow">{{ type.expanded ? '▼' : '▶' }}</span>
+      {{ type.name }}
+    </div>
 
-<div *ngIf="!loading && products.length === 0">
-  No products found.
-</div>
+    <!-- Product List (Lazy Loaded) -->
+    <div *ngIf="type.expanded" class="products-list">
+      <div *ngFor="let product of type.products" class="product-item">
+        {{ product.name }} - {{ product.description }}
+      </div>
+    </div>
 
-<div *ngIf="!loading && products.length > 0">
-  <div *ngFor="let product of products" class="product-card">
-    <h3>{{ product.name }}</h3>
-    <p>{{ product.description }}</p>
-    <img *ngIf="product.imageUrl" [src]="product.imageUrl" alt="{{ product.name }}" width="150" />
   </div>
 </div>
