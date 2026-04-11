@@ -33,7 +33,6 @@ builder.Services.Configure<FtpSettings>(
 
 // ── JWT settings ──────────────────────────────────────────────────────────────
 // Override with JWT_SECRET environment variable in production.
-// e.g. set JWT_SECRET=your-secret-here before running.
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET")
     ?? jwtSection["Secret"]
@@ -58,7 +57,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtSection["Issuer"],
             ValidAudience = jwtSection["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ClockSkew = TimeSpan.Zero   // no grace period on expiry
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -110,7 +109,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:4200",
                 "https://localhost:4200",
                 "https://arrowinstruments.in",
-                "https://www.arrowinstruments.in"
+                "https://www.arrowinstruments.in",
+                "https://arrowinstruments-production.up.railway.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -121,23 +121,22 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 // ═════════════════════════════════════════════════════════════════════════════
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger enabled in all environments temporarily so endpoints can be tested
+// on Railway. Remove the unconditional block and restore IsDevelopment() guard
+// once the production Angular frontend is confirmed working.
+app.UseSwagger();
+app.UseSwaggerUI();
 
-// Redirect HTTP → HTTPS before anything else, so preflight requests
-// arriving on HTTP are upgraded before CORS sees them.
-app.UseHttpsRedirection();
+// NOTE: UseHttpsRedirection is intentionally removed.
+// Railway (and most reverse-proxy hosts) terminate TLS externally.
+// The container receives plain HTTP on port 8080. Adding HTTPS redirection
+// here would cause every request to issue a 307 redirect to an HTTPS port
+// that does not exist inside the container, resulting in universal 404/ERR.
 
-// Routing must be established before CORS so the middleware pipeline
-// knows which endpoint is being targeted.
 app.UseRouting();
 
-// CORS must come after routing but BEFORE authentication/authorization.
-// This ensures the browser's OPTIONS preflight gets a proper response
-// without hitting auth checks (which would return 401 and block the preflight).
+// CORS must come after routing but before authentication/authorization so that
+// OPTIONS preflight requests are answered before hitting any auth check.
 app.UseCors("AllowAngularApp");
 
 app.UseAuthentication();
