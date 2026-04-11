@@ -26,8 +26,7 @@ export class MegaMenu {
         this.products = data;
         this.loading = false;
       },
-      error: err => {
-        console.error('Error fetching products', err);
+      error: () => {
         this.loading = false;
       }
     });

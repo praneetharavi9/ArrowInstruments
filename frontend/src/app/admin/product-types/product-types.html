@@ -1,0 +1,126 @@
+<div class="page-header">
+  <div>
+    <h4 class="page-title">Product Types</h4>
+    <p class="page-subtitle">Manage the categories your products belong to</p>
+  </div>
+  <button class="btn btn-add" (click)="openAddModal()">
+    <i class="fa-solid fa-plus me-2"></i>Add New Category
+  </button>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-danger" role="status"></div>
+  <p class="mt-2 text-muted">Loading categories...</p>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && productTypes.length === 0" class="empty-state">
+  <i class="fa-solid fa-layer-group"></i>
+  <h5>No product categories yet</h5>
+  <p>Click "Add New Category" to create your first product type.</p>
+</div>
+
+<!-- Table -->
+<div *ngIf="!loading && productTypes.length > 0" class="table-card">
+  <table class="table admin-table">
+    <thead>
+      <tr>
+        <th>Category Name</th>
+        <th>Description</th>
+        <th>Products</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let type of productTypes">
+        <td class="fw-semibold">{{ type.productTypeName }}</td>
+        <td class="text-muted">{{ type.productTypeDescription || '—' }}</td>
+        <td>
+          <span class="badge bg-secondary">{{ type.productCount }}</span>
+        </td>
+        <td>
+          <div class="btn-actions">
+            <button class="btn btn-edit btn-sm" (click)="openEditModal(type)">
+              <i class="fa-solid fa-pencil me-1"></i>Edit
+            </button>
+            <button class="btn btn-delete btn-sm" (click)="confirmDelete(type)">
+              <i class="fa-solid fa-trash me-1"></i>Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-backdrop-overlay" *ngIf="showModal" (click)="closeModal()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showModal">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-layer-group me-2" style="color:#770202"></i>
+          {{ modalMode === 'add' ? 'Add New Category' : 'Edit Category' }}
+        </h5>
+        <button class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label required-label">Category Name</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="formName"
+            placeholder="e.g. Temperature Indicators"
+            maxlength="255">
+          <div *ngIf="!formName.trim() && formLoading" class="form-text text-danger">Name is required.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description <span class="text-muted">(optional)</span></label>
+          <textarea
+            class="form-control"
+            [(ngModel)]="formDescription"
+            rows="3"
+            placeholder="Brief description of this product category"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button
+          class="btn btn-save"
+          (click)="saveProductType()"
+          [disabled]="formLoading || !formName.trim()">
+          <span *ngIf="formLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ formLoading ? 'Saving...' : (modalMode === 'add' ? 'Add Category' : 'Save Changes') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-backdrop-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showDeleteConfirm">
+  <div class="modal-dialog modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Category
+        </h5>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>{{ deletingName }}</strong>?</p>
+        <p class="text-danger small"><i class="fa-solid fa-triangle-exclamation me-1"></i>This will permanently delete <strong>ALL products and specifications</strong> inside this category. This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button class="btn btn-danger" (click)="doDelete()" [disabled]="deleteLoading">
+          <span *ngIf="deleteLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ deleteLoading ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

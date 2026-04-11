@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Models
@@ -11,10 +10,10 @@ namespace Backend.Models
         [Column("product_type_id")]
         public int ProductTypeId { get; set; }
 
-        [Column("product_type_name")]
         [Required]
-        [StringLength(255)] // You can adjust max length if known
-        public string ProductTypeName { get; set; }
+        [Column("product_type_name")]
+        [StringLength(255)]
+        public string ProductTypeName { get; set; } = string.Empty;
 
         [Column("product_type_description", TypeName = "text")]
         public string? ProductTypeDescription { get; set; }

@@ -4,24 +4,24 @@
 
       <!-- Loop through product types -->
       <div class="col-md-4" *ngFor="let type of productTypes">
-        <h6 class="dropdown-header" (click)="toggleProducts(type)" style="cursor: pointer;">
+        <h6 class="dropdown-header"
+            [routerLink]="['/products']"
+            [queryParams]="{ type: type.id }"
+            style="cursor: pointer;">
+          
+               <a class="dropdown-item"
+           [routerLink]="['/products']"
+           [queryParams]="{ type: type.id }">
           {{ type.name }}
-          <span *ngIf="type.expanded">▲</span>
-          <span *ngIf="!type.expanded">▼</span>
-        </h6>
+        </a>
 
-        <!-- Show products if expanded -->
-        <div *ngIf="type.expanded">
-          <a class="dropdown-item" *ngFor="let product of type.products" [routerLink]="['/products', product.id]">
-            {{ product.name }}
-          </a>
-        </div>
+        </h6>
+   
       </div>
 
     </div>
   </div>
 
-  <!-- Loading state -->
   <ng-template #loadingTemplate>
     <div class="p-4">
       <p>Loading product types...</p>

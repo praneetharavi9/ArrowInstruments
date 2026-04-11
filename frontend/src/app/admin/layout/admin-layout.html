@@ -1,0 +1,73 @@
+<div class="admin-shell" [class.sidebar-collapsed]="sidebarCollapsed">
+
+  <!-- Top Navbar -->
+  <nav class="admin-navbar">
+    <div class="navbar-left">
+      <button class="sidebar-toggle" (click)="sidebarCollapsed = !sidebarCollapsed" title="Toggle menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <span class="app-name">
+        <i class="fa-solid fa-gauge-high me-2" style="color:#770202"></i>
+        Arrow Instruments
+      </span>
+    </div>
+    <div class="navbar-right">
+      <button class="btn btn-outline-danger btn-sm" (click)="logout()">
+        <i class="fa-solid fa-right-from-bracket me-1"></i>Logout
+      </button>
+    </div>
+  </nav>
+
+  <!-- Body -->
+  <div class="admin-body">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <nav class="sidebar-nav">
+        <a routerLink="/admin/dashboard" routerLinkActive="active" class="sidebar-link">
+          <i class="fa-solid fa-house"></i>
+          <span class="link-label">Dashboard</span>
+        </a>
+        <a routerLink="/admin/product-types" routerLinkActive="active" class="sidebar-link">
+          <i class="fa-solid fa-layer-group"></i>
+          <span class="link-label">Product Types</span>
+        </a>
+        <a routerLink="/admin/products" routerLinkActive="active" class="sidebar-link">
+          <i class="fa-solid fa-box"></i>
+          <span class="link-label">Products</span>
+        </a>
+        <a routerLink="/admin/enquiries" routerLinkActive="active" class="sidebar-link">
+          <i class="fa-solid fa-envelope"></i>
+          <span class="link-label">Enquiries</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" aria-live="polite">
+    <div
+      *ngFor="let toast of toasts"
+      class="toast-item"
+      [class.toast-success]="toast.type === 'success'"
+      [class.toast-danger]="toast.type === 'danger'"
+      [class.toast-warning]="toast.type === 'warning'">
+      <i class="fa-solid"
+        [class.fa-circle-check]="toast.type === 'success'"
+        [class.fa-circle-xmark]="toast.type === 'danger'"
+        [class.fa-triangle-exclamation]="toast.type === 'warning'">
+      </i>
+      <span class="toast-message">{{ toast.message }}</span>
+      <button class="toast-close" (click)="dismissToast(toast.id)" aria-label="Dismiss">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+</div>

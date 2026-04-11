@@ -6,5 +6,6 @@ namespace Backend.Repository.Interfaces
     {
         Task<List<Product>> GetAllProducts();
         Task<List<Product>> GetProductsByProductId(int productTypeId);
+        Task<Product?> GetProductById(int productId);
     }
 }

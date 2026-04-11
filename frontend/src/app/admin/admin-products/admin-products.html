@@ -1,0 +1,236 @@
+<div class="page-header">
+  <div>
+    <h4 class="page-title">Products</h4>
+    <p class="page-subtitle">Manage your product catalog</p>
+  </div>
+  <button class="btn btn-add" (click)="openAddModal()" [disabled]="typesLoading">
+    <i class="fa-solid fa-plus me-2"></i>Add New Product
+  </button>
+</div>
+
+<!-- Category Filter -->
+@if (!typesLoading && productTypes.length > 0) {
+  <div class="filter-bar">
+    <label class="filter-label">
+      <i class="fa-solid fa-filter me-1"></i>Filter by Category:
+    </label>
+    <select class="form-select filter-select" [(ngModel)]="selectedTypeId" (ngModelChange)="onTypeChange()">
+      @for (type of productTypes; track type.productTypeId) {
+        <option [value]="type.productTypeId">{{ type.productTypeName }}</option>
+      }
+    </select>
+  </div>
+}
+
+<!-- Loading -->
+@if (loading || typesLoading) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-danger" role="status"></div>
+    <p class="mt-2 text-muted">Loading products...</p>
+  </div>
+}
+
+<!-- Empty State -->
+@if (!loading && !typesLoading && products.length === 0) {
+  <div class="empty-state">
+    <i class="fa-solid fa-box-open"></i>
+    <h5>No products in this category</h5>
+    <p>Click "Add New Product" to add your first product here.</p>
+  </div>
+}
+
+<!-- Products Table -->
+@if (!loading && !typesLoading && products.length > 0) {
+  <div class="table-card">
+    <table class="table admin-table">
+      <thead>
+        <tr>
+          <th style="width:80px">Image</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Specs</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (product of products; track product.productId) {
+          <tr>
+            <td>
+              <img
+                [src]="getImageUrl(product.imagePath)"
+                [alt]="product.productName"
+                class="product-thumb"
+                onerror="this.src='assets/placeholder.jpg'">
+            </td>
+            <td class="fw-semibold">{{ product.productName }}</td>
+            <td class="text-muted desc-cell">
+              {{ product.productDescription ? (product.productDescription.length > 80 ? product.productDescription.slice(0,80) + '…' : product.productDescription) : '—' }}
+            </td>
+            <td>
+              <span class="badge bg-secondary">{{ product.specs.length }} specs</span>
+            </td>
+            <td>
+              <span [class]="product.isActive ? 'badge bg-success' : 'badge bg-danger'">
+                {{ product.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <div class="btn-actions">
+                <button class="btn btn-edit btn-sm" (click)="openEditModal(product)">
+                  <i class="fa-solid fa-pencil me-1"></i>Edit
+                </button>
+                <button class="btn btn-delete btn-sm" (click)="confirmDelete(product)">
+                  <i class="fa-solid fa-trash me-1"></i>Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<!-- ── Add / Edit Modal ───────────────────────────────── -->
+@if (showModal) {
+  <div class="modal-backdrop-overlay" (click)="closeModal()"></div>
+  <div class="modal show" tabindex="-1" style="display:block">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fa-solid fa-box me-2" style="color:#770202"></i>
+            {{ modalMode === 'add' ? 'Add New Product' : 'Edit Product' }}
+          </h5>
+          <button class="btn-close" (click)="closeModal()"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- Name -->
+          <div class="mb-3">
+            <label class="form-label required-label">Product Name</label>
+            <input type="text" class="form-control" [(ngModel)]="formData.productName"
+              placeholder="e.g. Digital Temperature Indicator" maxlength="100">
+          </div>
+
+          <!-- Description -->
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" [(ngModel)]="formData.productDescription"
+              rows="3" placeholder="Brief description of the product"></textarea>
+          </div>
+
+          <!-- Category -->
+          <div class="mb-3">
+            <label class="form-label required-label">Category</label>
+            <select class="form-select" [(ngModel)]="formData.productTypeId">
+              <option [value]="0" disabled>Select a category</option>
+              @for (type of productTypes; track type.productTypeId) {
+                <option [value]="type.productTypeId">{{ type.productTypeName }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Active toggle -->
+          <div class="mb-3 form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="productActive" [(ngModel)]="formData.isActive">
+            <label class="form-check-label" for="productActive">Active (visible on website)</label>
+          </div>
+
+          <!-- Image Upload -->
+          <div class="mb-3">
+            <label class="form-label">Product Image</label>
+            <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event)">
+            @if (previewUrl) {
+              <div class="image-preview mt-2">
+                <img [src]="previewUrl" alt="Preview" class="preview-img">
+                <small class="text-muted d-block mt-1">New image selected</small>
+              </div>
+            } @else if (editingProduct?.imagePath) {
+              <div class="image-preview mt-2">
+                <img [src]="getImageUrl(editingProduct!.imagePath)" alt="Current image" class="preview-img">
+                <small class="text-muted d-block mt-1">Current image — upload a new file to replace it</small>
+              </div>
+            }
+          </div>
+
+          <!-- Specifications -->
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0">Specifications</label>
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="addSpec()">
+                <i class="fa-solid fa-plus me-1"></i>Add Spec Row
+              </button>
+            </div>
+
+            @if (specRows.length === 0) {
+              <div class="text-muted small p-3 bg-light rounded border">
+                No specifications yet. Click "Add Spec Row" to add key-value pairs like<br>
+                <em>Range → 0°C to 400°C</em>
+              </div>
+            }
+
+            @for (spec of specRows; track $index; let i = $index) {
+              <div class="spec-row">
+                <input type="text" class="form-control spec-name" [(ngModel)]="spec.specName"
+                  [name]="'specName_' + i" placeholder="Name (e.g. Range)">
+                <input type="text" class="form-control spec-value" [(ngModel)]="spec.specValue"
+                  [name]="'specValue_' + i" placeholder="Value (e.g. 0°C to 400°C)">
+                <button class="btn btn-outline-danger btn-sm spec-remove" (click)="removeSpec(i)" title="Remove row">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+          <button
+            class="btn btn-save"
+            (click)="saveProduct()"
+            [disabled]="formLoading || !formData.productName.trim() || !formData.productTypeId">
+            @if (formLoading) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ formLoading ? 'Saving…' : (modalMode === 'add' ? 'Add Product' : 'Save Changes') }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Delete Confirm Modal ───────────────────────────── -->
+@if (showDeleteConfirm) {
+  <div class="modal-backdrop-overlay" (click)="cancelDelete()"></div>
+  <div class="modal show" tabindex="-1" style="display:block">
+    <div class="modal-dialog modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Product
+          </h5>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete <strong>{{ deletingProduct?.productName }}</strong>?</p>
+          <p class="text-danger small"><i class="fa-solid fa-triangle-exclamation me-1"></i>This will also delete all its specifications. This cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+          <button class="btn btn-danger" (click)="doDelete()" [disabled]="deleteLoading">
+            @if (deleteLoading) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ deleteLoading ? 'Deleting…' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

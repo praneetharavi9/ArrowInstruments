@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Product } from '../models/product.model';
 import { ProductService } from '../services/product';
 import { ProductType } from '../models/product-type.model';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-products',
@@ -11,44 +12,67 @@ import { ProductType } from '../models/product-type.model';
 })
 export class Products implements OnInit {
 
-  products : Product [] = [];
+  products: Product[] = [];
+  productTypes: ProductType[] = [];
+  selectedProduct: Product | null = null;
   loading = true;
-  productTypes : ProductType[] = [];
 
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.GetAllProductTypes();
-  }
+  this.route.queryParams.subscribe(params => {
+    const typeId = params['type'];
+    this.GetAllProductTypes(typeId ? +typeId : null);
+  });
+}
 
-  GetAllProducts() : void{
-  this.productService.getProducts().subscribe({
-      next: data => {
-        this.products = data;
-        this.loading = false;
-      },
-      error: err => {
-        console.error('Error fetching products', err);
-        this.loading = false;
+GetAllProductTypes(autoExpandTypeId: number | null = null): void {
+  this.productService.getAllProductsTypes().subscribe({
+    next: data => {
+      this.productTypes = data;
+      this.loading = false;
+
+      // Auto expand after types are loaded
+      if (autoExpandTypeId) {
+        const type = this.productTypes.find(t => t.id === autoExpandTypeId);
+        if (type) this.toggleProducts(type);
       }
-    });
-  }
-
-  GetAllProductTypes() : void{
-    this.productService.getAllProductsTypes().subscribe({
-      next: data =>{
-        this.productTypes = data;
-      }
-    });
-  }
-
-
-    toggleProducts(productType: ProductType) {
-    if (!productType.products) {
-      // Lazy load products
-      this.productService.getProductsByProductTypeId(productType.id)
-        .subscribe(products => productType.products = products);
+    },
+    error: () => {
+      this.loading = false;
     }
-    productType.expanded = !productType.expanded;
+  });
+}
+
+  toggleProducts(productType: ProductType): void {
+    if (!productType.products) {
+      // Lazy load products for this type
+      this.productService.getProductsByProductTypeId(productType.id)
+        .subscribe({
+          next: products => {
+            productType.products = products;
+            productType.expanded = true;
+          },
+          error: () => {}
+        });
+    } else {
+      productType.expanded = !productType.expanded;
+    }
   }
+
+selectProduct(product: Product): void {
+  this.selectedProduct = this.selectedProduct?.id === product.id ? null : product;
+
+  setTimeout(() => {
+    const detailPanel = document.getElementById('product-detail-panel');
+    if (detailPanel) {
+      const navbarHeight = 100; // match your navbar height from app.css margin-top
+      const top = detailPanel.getBoundingClientRect().top + window.scrollY - navbarHeight;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }, 50);
+}
 }

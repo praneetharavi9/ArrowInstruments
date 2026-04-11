@@ -1,16 +1,96 @@
-<div class="product-types">
-  <div *ngFor="let type of productTypes" class="product-type">
-    
-    <!-- Arrow + Product Type Name -->
-    <div class="product-type-header" (click)="toggleProducts(type)">
-      <span class="arrow">{{ type.expanded ? '▼' : '▶' }}</span>
-      {{ type.name }}
+<div class="products-page container py-4">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-danger" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading products...</p>
+  </div>
+
+  <div *ngIf="!loading" class="row">
+
+    <!-- LEFT: Product Type List -->
+    <div class="col-md-4 col-lg-3">
+      <div class="product-type-list">
+        <h5 class="type-list-header">Product Categories</h5>
+
+        <div *ngFor="let type of productTypes" class="product-type">
+
+          <!-- Product Type Header -->
+          <div class="product-type-header" (click)="toggleProducts(type)">
+            <span class="arrow">{{ type.expanded ? '▼' : '▶' }}</span>
+            <span class="type-name">{{ type.name }}</span>
+          </div>
+
+          <!-- Product List under this type -->
+          <div *ngIf="type.expanded" class="products-list">
+            <div *ngIf="!type.products" class="loading-products">
+              <small>Loading...</small>
+            </div>
+            <div
+              *ngFor="let product of type.products"
+              class="product-item"
+              [class.active]="selectedProduct?.id === product.id"
+              (click)="selectProduct(product)">
+              {{ product.name }}
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
 
-    <!-- Product List (Lazy Loaded) -->
-    <div *ngIf="type.expanded" class="products-list">
-      <div *ngFor="let product of type.products" class="product-item">
-        {{ product.name }} - {{ product.description }}
+    <!-- RIGHT: Product Detail Panel -->
+    <div class="col-md-8 col-lg-9" id="product-detail-panel">
+
+      <!-- No product selected -->
+      <div *ngIf="!selectedProduct" class="no-selection">
+        <div class="text-center py-5">
+          <i class="fa-solid fa-arrow-left fa-2x mb-3" style="color: #770202;"></i>
+          <h5>Select a product from the list to view details</h5>
+          <p class="text-muted">Browse our categories on the left to explore our range of instruments.</p>
+        </div>
+      </div>
+
+      <!-- Product Detail -->
+      <div *ngIf="selectedProduct" class="product-detail">
+
+        <div class="row">
+          <!-- Product Image -->
+          <div class="col-md-5 mb-3">
+            <img
+              [src]="selectedProduct.imageUrl"
+              [alt]="selectedProduct.name"
+              class="product-image"
+              onerror="this.src='assets/placeholder.jpg'">
+          </div>
+
+          <!-- Product Info -->
+          <div class="col-md-7">
+            <h4 class="product-name">{{ selectedProduct.name }}</h4>
+            <p class="product-description">{{ selectedProduct.description }}</p>
+
+            <!-- Specs Table -->
+            <div *ngIf="selectedProduct.specs && selectedProduct.specs.length > 0" class="specs-section">
+              <h6 class="specs-header">Specifications</h6>
+              <table class="table table-sm specs-table">
+                <tbody>
+                  <tr *ngFor="let spec of selectedProduct.specs">
+                    <td class="spec-name">{{ spec.specName }}</td>
+                    <td class="spec-value">{{ spec.specValue }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Contact CTA -->
+            <div class="mt-3">
+              <a routerLink="/contact" class="btn btn-enquire">Enquire Now</a>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 

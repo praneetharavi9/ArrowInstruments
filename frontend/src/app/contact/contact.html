@@ -1,94 +1,158 @@
 <div class="container">
     <h2 class="contact-header mb-4 mt-4 text-center">Contact Us Today!</h2>
+
     <div class="row g-3 mb-4">
+
+        <!-- LEFT: Form OR Success Message -->
         <div class="col-12 col-md-6">
-            <form>
+
+            <!-- SUCCESS STATE -->
+            <div *ngIf="submitted" class="success-box">
+                <div class="success-icon">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h4 class="success-title">Enquiry Submitted!</h4>
+                <p class="success-message">
+                    Thank you for reaching out to us. Your enquiry has been received and a member of our team will get back to you shortly.
+                </p>
+                <p class="success-sub">
+                    In the meantime, feel free to call us at <strong>+91-8008030606</strong>.
+                </p>
+                <button class="btn another-btn mt-2" (click)="submitAnother()">
+                    Submit Another Enquiry
+                </button>
+            </div>
+
+            <!-- FORM STATE -->
+            <form *ngIf="!submitted" (ngSubmit)="onSubmit()">
                 <h3 class="contact-from-header mb-4 text-center">Request Pricing and Information</h3>
 
+                <!-- General Error -->
+                <div *ngIf="errorMessage" class="alert alert-danger mb-3">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i> {{ errorMessage }}
+                </div>
+
                 <div class="row g-3 contact-fields">
+
                     <!-- Name -->
                     <div class="col-12 col-md-6">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" placeholder="Your Name">
+                        <label for="name" class="form-label">
+                            Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               [class.is-invalid]="errors.name"
+                               id="name"
+                               placeholder="Your Name"
+                               [(ngModel)]="formData.name"
+                               name="name">
+                        <div *ngIf="errors.name" class="invalid-feedback">
+                            {{ errors.name }}
+                        </div>
                     </div>
 
                     <!-- Company Name -->
                     <div class="col-12 col-md-6">
                         <label for="company" class="form-label">Company Name</label>
-                        <input type="text" class="form-control" id="company" placeholder="Company Name">
+                        <input type="text"
+                               class="form-control"
+                               id="company"
+                               placeholder="Your Company Name"
+                               [(ngModel)]="formData.companyName"
+                               name="companyName">
                     </div>
 
                     <!-- Email -->
                     <div class="col-12 col-md-6">
-                        <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" placeholder="Email Address">
+                        <label for="email" class="form-label">
+                            Email Address <span class="text-danger">*</span>
+                        </label>
+                        <input type="email"
+                               class="form-control"
+                               [class.is-invalid]="errors.email"
+                               id="email"
+                               placeholder="Email Address"
+                               [(ngModel)]="formData.email"
+                               name="email">
+                        <div *ngIf="errors.email" class="invalid-feedback">
+                            {{ errors.email }}
+                        </div>
                     </div>
 
                     <!-- Phone -->
                     <div class="col-12 col-md-6">
                         <label for="phone" class="form-label">Phone Number</label>
-                        <input type="tel" class="form-control" id="phone" placeholder="Phone Number">
+                        <input type="tel"
+                               class="form-control"
+                               [class.is-invalid]="errors.phone"
+                               id="phone"
+                               placeholder="e.g. 9876543210"
+                               [(ngModel)]="formData.phone"
+                               name="phone">
+                        <div *ngIf="errors.phone" class="invalid-feedback">
+                            {{ errors.phone }}
+                        </div>
+                        <div class="form-text">
+                             Mobile numbers only (10 digits starting with 6-9)
+                        </div>
                     </div>
 
                     <!-- Message -->
                     <div class="col-12">
                         <label for="message" class="form-label">Message</label>
-                        <textarea class="form-control" id="message" rows="4" placeholder="Your Message"></textarea>
+                        <textarea class="form-control"
+                                  id="message"
+                                  rows="4"
+                                  placeholder="Your Message"
+                                  [(ngModel)]="formData.message"
+                                  name="message"></textarea>
                     </div>
 
-                    <!-- Submit button -->
+                    <!-- Submit -->
                     <div class="col-12 text-center">
-                        <button type="submit" class="btn submit-btn px-5">Submit</button>
+                        <button type="submit"
+                                class="btn submit-btn px-5"
+                                [disabled]="submitting">
+                            <span *ngIf="!submitting">Submit Enquiry</span>
+                            <span *ngIf="submitting">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Sending...
+                            </span>
+                        </button>
                     </div>
+
                 </div>
             </form>
-
         </div>
+
+        <!-- RIGHT: Contact Info -->
         <div class="col-12 col-md-6">
             <div class="ms-md-4">
                 <div class="py-4">
-
-                    <!-- Phone -->
                     <p>
-                        <i class="fa-solid fa-phone me-2"></i> <!-- Bootstrap Icons -->
+                        <i class="fa-solid fa-phone me-2"></i>
                         +91-8008030606
                     </p>
-
-                    <!-- Email -->
                     <p>
                         <i class="fa-solid fa-envelope me-2"></i>
-                        srinivas.arrowinstruments@gmail.com
+                        enquiries@arrowinstruments.in
                     </p>
                     <h3 class="address-header mb-3">Our Address</h3>
-
-                    <!-- Address -->
                     <div class="address-text">
                         <p>
                             5-9-262/P-10/R, Rajiv Gandhi Nagar, <br>
                             Prashanti Nagar, Kukatpally Village, <br>
-                            Hyderabad-500037, Telangana, India<br>
-
+                            Hyderabad-500037, Telangana, India
                         </p>
                     </div>
-
-
-                    <!-- Directions-->
                     <p>
                         <i class="fas fa-directions me-3"></i>
-                        <a href="https://www.google.co.in/maps/dir//17.47853300,78.43021000" target="_blank">Get
-                            Directions</a>
+                        <a href="https://www.google.co.in/maps/dir//17.47853300,78.43021000"
+                           target="_blank">Get Directions</a>
                     </p>
-
-                    <!-- <h3 class="address-header mb-3">Corporate Address</h3> -->
-                    <!-- <div class="address-text">
-                        <p>
-                            13-1-151 Plot No.50, Flat No.G1, <br />
-                            Groud Floor, Snehapuri Colony, <br />
-                            Mothinagar, 500018, Hyderabad
-                        </p>
-                    </div> -->
                 </div>
             </div>
         </div>
+
     </div>
 </div>

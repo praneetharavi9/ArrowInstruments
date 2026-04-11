@@ -16,13 +16,13 @@ namespace Backend.Models
         [Required]
         [Column("product_name")]
         [MaxLength(100)]
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = string.Empty;
 
         [Column("product_description")]
-        public string? ProductDescription { get; set; } // optional description
+        public string? ProductDescription { get; set; }
 
         [Column("image_path")]
-        public string? ImagePath { get; set; } // optional image path
+        public string? ImagePath { get; set; }
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
@@ -31,9 +31,9 @@ namespace Backend.Models
         public DateTime DateCreated { get; set; } = DateTime.UtcNow;
 
         [Column("date_updated")]
-        public DateTime? DateUpdated { get; set; } // optional update date
+        public DateTime? DateUpdated { get; set; }
 
+        // Navigation property - specs for this product
+        public List<ProductSpec> Specs { get; set; } = new List<ProductSpec>();
     }
 }
-
-           

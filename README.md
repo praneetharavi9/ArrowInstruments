@@ -1,162 +1,138 @@
-# ArrowInstruments 🎵
+# Arrow Instruments
 
-A full-stack web application for a manufacturer of professional instruments — built with ASP.NET Core Web API and Angular/TypeScript, featuring a product catalog, secure authentication, and complete CRUD operations backed by a relational database.
+Product catalog and enquiry management website for Arrow Instruments — an industrial instrumentation company based in India.
 
----
+## Tech Stack
 
-## 🚀 Tech Stack
+| Layer | Technology |
+|---|---|
+| Backend API | ASP.NET Core 8, EF Core 9 (Pomelo MySQL) |
+| Frontend | Angular 20, Bootstrap 5.3, Font Awesome 7 |
+| Database | MySQL 8 (hosted on HostGator) |
+| Image storage | FTP to HostGator `public_html/product_images/` |
+| Email | MailKit / SMTP (HostGator mail server) |
+| Auth | JWT Bearer tokens, BCrypt password hashing |
 
-**Backend**
-- ASP.NET Core Web API (C#)
-- Entity Framework Core
-- SQL Server / PostgreSQL
-- JWT Authentication & Role-Based Authorization
-- RESTful API design
-
-**Frontend**
-- Angular with TypeScript
-- HTML5 & CSS3
-- Responsive UI design
-
----
-
-## ✨ Features
-
-- 🔐 **Secure Authentication** — JWT-based login with role-based access control
-- 📦 **Product Catalog** — Browse and filter instruments by category
-- 📝 **CRUD Operations** — Full create, read, update, delete for product management
-- 📬 **Contact Form** — Customer inquiry submission
-- 🔗 **RESTful API** — Clean, documented API endpoints consumed by the Angular frontend
-- 🗄️ **Database Integration** — Persistent data storage with SQL Server/PostgreSQL via Entity Framework Core
-
----
-
-## 🏗️ Architecture
+## Project Structure
 
 ```
 ArrowInstruments/
-├── Backend/                  # ASP.NET Core Web API
-│   ├── Controllers/          # API endpoint controllers
-│   ├── Models/               # Entity models
-│   ├── Services/             # Business logic layer
-│   ├── Data/                 # DbContext & migrations
-│   └── appsettings.json      # Configuration
+├── Backend/                  # ASP.NET Core 8 Web API
+│   ├── Controllers/          # ProductsController, ProductTypeController,
+│   │                         #   AuthController, ContactController, EnquiriesController
+│   ├── Data/AppDbContext.cs   # EF Core context
+│   ├── Models/               # EF models + settings POCOs
+│   ├── Repository/           # Repository pattern (products, product types)
+│   ├── appsettings.json      # Base config — PLACEHOLDER values only (committed)
+│   ├── appsettings.Development.json   # Real dev credentials (git-ignored)
+│   └── appsettings.Production.json    # Real prod credentials (git-ignored)
 │
-└── frontend/                 # Angular TypeScript app
-    ├── src/
-    │   ├── app/
-    │   │   ├── components/   # UI components
-    │   │   ├── services/     # API service layer
-    │   │   └── models/       # TypeScript interfaces
-    │   └── environments/     # Environment configs
-    └── angular.json
+└── frontend/                 # Angular 20 SPA
+    └── src/
+        ├── app/
+        │   ├── home/         # Landing page
+        │   ├── products/     # Public product catalog
+        │   ├── about/        # About page
+        │   ├── contact/      # Contact / enquiry form
+        │   ├── mega-menu/    # Product category navigation
+        │   └── admin/        # Lazy-loaded admin portal
+        │       ├── login/    # Admin login
+        │       ├── dashboard/
+        │       ├── product-types/
+        │       ├── admin-products/
+        │       └── enquiries/
+        └── environments/
+            ├── environment.ts             # Production config
+            └── environment.development.ts # Dev config (ng serve)
 ```
 
----
+## Prerequisites
 
-## ⚙️ Getting Started
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8)
+- Node.js 20+ and npm
+- Access credentials for MySQL, FTP, and SMTP (see [SECRETS.md](SECRETS.md))
 
-### Prerequisites
+## Local Development Setup
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- [Node.js 18+](https://nodejs.org/)
-- [Angular CLI](https://angular.io/cli) (`npm install -g @angular/cli`)
-- SQL Server or PostgreSQL
-
-### Backend Setup
+### 1. Backend
 
 ```bash
-# Navigate to backend
 cd Backend
 
-# Restore dependencies
+# Create your local secrets file (git-ignored):
+cp appsettings.json appsettings.Development.json
+# Edit appsettings.Development.json with real DB / FTP / email / JWT values.
+
 dotnet restore
-
-# Update appsettings.json with your connection string
-# "ConnectionStrings": { "DefaultConnection": "your-connection-string" }
-
-# Apply database migrations
-dotnet ef database update
-
-# Run the API
 dotnet run
+# API available at https://localhost:7275
 ```
 
-API will be available at `https://localhost:7001`
-
-### Frontend Setup
+### 2. Frontend
 
 ```bash
-# Navigate to frontend
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start the development server
-ng serve
+npm start
+# App available at http://localhost:4200
 ```
 
-App will be available at `http://localhost:4200`
+`ng serve` uses `environment.development.ts` automatically via `fileReplacements` in `angular.json`.
 
----
+## Production Build
 
-## 🔑 API Endpoints
+### Backend
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/auth/login` | User login | No |
-| POST | `/api/auth/register` | User registration | No |
-| GET | `/api/products` | Get all products | No |
-| GET | `/api/products/{id}` | Get product by ID | No |
-| POST | `/api/products` | Create product | Yes |
-| PUT | `/api/products/{id}` | Update product | Yes |
-| DELETE | `/api/products/{id}` | Delete product | Yes |
-| POST | `/api/contact` | Submit contact form | No |
+```bash
+cd Backend
+dotnet publish -c Release -o ./publish
+```
 
----
+Upload the contents of `Backend/publish/` to your hosting environment.
+Set the `JWT_SECRET` environment variable (or fill `appsettings.Production.json`) before starting.
 
-## 🔒 Authentication
+### Frontend
 
-The application uses **JWT (JSON Web Tokens)** for secure authentication:
-- Tokens are issued on successful login
-- Protected endpoints require a valid Bearer token
-- Role-based access control restricts admin operations
+```bash
+cd frontend
+npm run build:prod
+```
 
----
+Output is written to `frontend/dist/frontend/browser/`. Upload to `public_html/` on HostGator.
 
-## 📸 Screenshots
+## Environment Variables
 
-> _Add screenshots of your app here_
-> 
-> Example:
-> ```
-> ![Home Page](screenshots/home.png)
-> ![Product Catalog](screenshots/catalog.png)
-> ![Admin Dashboard](screenshots/admin.png)
-> ```
+| Variable | Where used | Purpose |
+|---|---|---|
+| `JWT_SECRET` | Backend (env var) | Overrides `JwtSettings.Secret` at runtime |
 
----
+All other credentials live in `appsettings.Development.json` (local) or `appsettings.Production.json` (server). Neither file is committed to git. See [SECRETS.md](SECRETS.md) for the full list.
 
-## 🛣️ Roadmap
+## Admin Portal
 
-- [ ] Deploy to Azure App Service
-- [ ] Add product search and filtering
-- [ ] Implement shopping cart
-- [ ] Add admin dashboard
-- [ ] Write unit tests with NUnit
+The admin portal is at `/admin/login`.
 
----
+- JWT-based login with BCrypt password verification
+- Product type (category) CRUD
+- Product CRUD with FTP image upload
+- Enquiry management (view, mark responded, delete)
 
-## 👩‍💻 Author
+## API Endpoints
 
-**Praneetha Ravi**  
-Full-Stack Developer | .NET · Angular · AWS · Azure  
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/praneetharavi/)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white)](https://github.com/praneetharavi9)
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/admin/login` | — | Admin login |
+| GET | `/api/auth/admin/verify` | Admin | Verify token |
+| GET | `/api/producttype` | — | List all categories |
+| POST | `/api/producttype` | Admin | Create category |
+| PUT | `/api/producttype/{id}` | Admin | Update category |
+| DELETE | `/api/producttype/{id}` | Admin | Delete category (cascades) |
+| GET | `/api/products` | — | List products (optional `?typeId=`) |
+| POST | `/api/products` | Admin | Create product |
+| PUT | `/api/products/{id}` | Admin | Update product |
+| DELETE | `/api/products/{id}` | Admin | Delete product |
+| POST | `/api/products/{id}/image` | Admin | Upload product image via FTP |
+| POST | `/api/contact` | — | Submit enquiry |
+| GET | `/api/enquiries` | Admin | List enquiries |
+| PUT | `/api/enquiries/{id}/status` | Admin | Update enquiry status |
+| DELETE | `/api/enquiries/{id}` | Admin | Delete enquiry |

@@ -1,28 +1,76 @@
-# Angular specific
-/dist/
-/out-tsc/
-/tmp/
-/coverage/
-/e2e/test-output/
-/.angular/
-.angular/
+# ── .NET / ASP.NET Core ────────────────────────────────────────────────────────
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+bld/
+artifacts/
+publish/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
 
-# Node modules and dependency files
-/node_modules/
-/package-lock.json
-/yarn.lock
+# User-specific Visual Studio files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
 
-# Environment files
-/.env
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/*
+!**/packages/repositories.config
+*.nuget.props
+*.nuget.targets
 
-# Angular CLI and build artefacts
-/.angular-cli.json
-/.ng/
+# Dotnet CLI
+project.lock.json
+project.fragment.lock.json
 
-# TypeScript cache
-*.tsbuildinfo
+# Test results
+TestResults/
+*.trx
+
+# Build artefacts
+*.dll
+*.exe
+*.pdb
+
+# ── SECRETS — never commit these ──────────────────────────────────────────────
+# appsettings.json IS committed (placeholder values only).
+# Environment overrides with real credentials are git-ignored.
+Backend/appsettings.Development.json
+Backend/appsettings.Production.json
+
+# ── Angular / Node ─────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/out-tsc/
+frontend/tmp/
+frontend/coverage/
+frontend/*.tsbuildinfo
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# ── IDE / OS ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Environment / secrets (general) ───────────────────────────────────────────
+.env
+.env.local
+.env.*.local

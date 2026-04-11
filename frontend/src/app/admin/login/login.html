@@ -1,0 +1,55 @@
+<div class="admin-login-wrapper">
+  <div class="login-card">
+
+    <div class="login-brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-gauge-high"></i>
+      </div>
+      <h2 class="brand-name">Arrow Instruments</h2>
+      <p class="brand-subtitle">Admin Portal</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" novalidate>
+      <div class="mb-3">
+        <label class="form-label">Email Address</label>
+        <input
+          type="email"
+          class="form-control"
+          [(ngModel)]="email"
+          name="email"
+          autocomplete="email"
+          required>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Password</label>
+        <div class="password-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            class="form-control"
+            [(ngModel)]="password"
+            name="password"
+            autocomplete="current-password"
+            required>
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="showPassword = !showPassword"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            <i class="fa-solid" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger py-2 mb-3">
+        <i class="fa-solid fa-circle-exclamation me-2"></i>{{ errorMessage }}
+      </div>
+
+      <button type="submit" class="btn btn-admin-primary w-100" [disabled]="loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+        {{ loading ? 'Logging in...' : 'Login' }}
+      </button>
+    </form>
+
+  </div>
+</div>

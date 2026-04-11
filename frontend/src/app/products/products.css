@@ -1,29 +1,190 @@
-.product-types {
-  margin: 1rem;
+/* Page Layout */
+.products-page {
+  min-height: 70vh;
+}
+
+/* Left Panel — Product Type List */
+.product-type-list {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.type-list-header {
+  background-color: #770202;
+  color: #fff;
+  padding: 12px 16px;
+  margin: 0;
+  font-family: 'Abril Fatface', serif;
+  font-size: 1rem;
 }
 
 .product-type {
-  margin-bottom: 1rem;
+  border-bottom: 1px solid #f0d0c9;
+}
+
+.product-type:last-child {
+  border-bottom: none;
 }
 
 .product-type-header {
-  cursor: pointer;
   display: flex;
   align-items: center;
-  font-weight: bold;
+  padding: 10px 16px;
+  cursor: pointer;
+  background-color: #fff;
+  transition: background-color 0.2s;
+  gap: 8px;
 }
 
-.product-type-header .arrow {
-  display: inline-block;
-  width: 1.2rem;
-  text-align: center;
-  margin-right: 0.5rem;
+.product-type-header:hover {
+  background-color: #fdf5f3;
 }
 
+.arrow {
+  color: #770202;
+  font-size: 0.7rem;
+  min-width: 12px;
+}
+
+.type-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #333;
+  line-height: 1.3;
+}
+
+/* Products under each type */
 .products-list {
-  margin-left: 1.7rem; /* Indent products under product type */
+  background-color: #fdf5f3;
+  border-top: 1px solid #f0d0c9;
+}
+
+.loading-products {
+  padding: 8px 16px;
+  color: #888;
 }
 
 .product-item {
-  padding: 0.2rem 0;
+  padding: 8px 16px 8px 36px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #444;
+  border-bottom: 1px solid #f5e5e0;
+  transition: all 0.2s;
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-item:hover {
+  background-color: #f0d0c9;
+  color: #770202;
+}
+
+.product-item.active {
+  background-color: #770202;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Right Panel — Product Detail */
+.no-selection {
+  background-color: #fafafa;
+  border: 2px dashed #f0d0c9;
+  border-radius: 12px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-detail {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.product-image {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #eee;
+}
+
+.product-name {
+  font-family: 'Abril Fatface', serif;
+  color: #770202;
+  margin-bottom: 12px;
+}
+
+.product-description {
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* Specs Table */
+.specs-section {
+  margin-top: 16px;
+}
+
+.specs-header {
+  font-weight: 700;
+  color: #770202;
+  border-bottom: 2px solid #f0d0c9;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.specs-table {
+  font-size: 0.85rem;
+}
+
+.specs-table tbody tr:nth-child(odd) {
+  background-color: #fdf5f3;
+}
+
+.spec-name {
+  font-weight: 600;
+  color: #555;
+  width: 40%;
+  vertical-align: top;
+}
+
+.spec-value {
+  color: #333;
+  vertical-align: top;
+}
+
+/* Enquire Button */
+.btn-enquire {
+  background-color: #770202;
+  color: #fff;
+  font-weight: bold;
+  padding: 10px 28px;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.btn-enquire:hover {
+  background-color: #f0d0c9;
+  color: #770202;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .product-type-list {
+    margin-bottom: 20px;
+  }
+
+  .no-selection {
+    min-height: 200px;
+  }
 }

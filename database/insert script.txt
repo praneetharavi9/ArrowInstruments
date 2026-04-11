@@ -1,0 +1,276 @@
+-- ============================================================
+-- ARROW INSTRUMENTS - Complete Database Insert Script
+-- Run this in BigRock cPanel phpMyAdmin
+-- ============================================================
+
+-- ============================================================
+-- STEP 1: Create product_specs table (run once)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS product_specs (
+  spec_id INT(11) NOT NULL AUTO_INCREMENT,
+  product_id INT(11) NOT NULL,
+  spec_name VARCHAR(100) NOT NULL,
+  spec_value TEXT NOT NULL,
+  display_order INT(11) DEFAULT 0,
+  PRIMARY KEY (spec_id),
+  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- STEP 2: Clear existing data (optional - comment out if not needed)
+-- ============================================================
+-- SET FOREIGN_KEY_CHECKS = 0;
+-- TRUNCATE TABLE product_specs;
+-- TRUNCATE TABLE products;
+-- TRUNCATE TABLE product_types;
+-- SET FOREIGN_KEY_CHECKS = 1;
+
+-- ============================================================
+-- STEP 3: Product Types
+-- ============================================================
+INSERT INTO product_types (product_type_id, product_type_name, product_type_description, is_active, date_created) VALUES
+(1, 'Temperature Indicators & Controllers', 'Flameproof and Non-Flameproof digital temperature indicators, controllers, scanners and dataloggers for pharma and industrial use', 1, NOW()),
+(2, 'Temperature Sensors', 'Flameproof RTD Pt-100 sensors and thermocouple sensors for hazardous area temperature measurement', 1, NOW()),
+(3, 'Process Indicators', 'Digital pressure, vacuum, pH and process indicators and loggers for industrial monitoring', 1, NOW()),
+(4, 'Gauges', 'Pressure, vacuum and compound gauges for industrial process measurement', 1, NOW()),
+(5, 'Flameproof Fixtures', 'FLP reactor vessel lamps, push button stations, hooters and well glass light fittings for hazardous areas', 1, NOW()),
+(6, 'Control Valves', 'Flameproof control valves for process flow regulation in hazardous environments', 1, NOW()),
+(7, 'Laboratory Instruments & Glassware', 'UV cabinets, KF titrators, pH meters, melting point apparatus, heating mantles, ovens and lab glassware', 1, NOW())
+ON DUPLICATE KEY UPDATE
+  product_type_name = VALUES(product_type_name),
+  product_type_description = VALUES(product_type_description);
+
+-- ============================================================
+-- STEP 4: Products
+-- ============================================================
+
+-- ---- TYPE 1: Temperature Indicators & Controllers ----
+INSERT INTO products (product_type_id, product_name, product_description, image_path, is_active, date_created) VALUES
+(1, 'FLP Digital Temp. Indicator', 'Single channel flameproof digital temperature indicator for hazardous pharmaceutical and industrial environments. Certified for Gas Group IIA & IIB, Zone 1 & 2.', 'flp_digital_temp_indicator.jpg', 1, NOW()),
+(1, 'FLP Dual Point Temp. Indicator', 'Two channel flameproof temperature indicator with independent display for each channel. Ideal for monitoring two process points simultaneously in hazardous areas.', 'flp_dual_point_temp_indicator.jpg', 1, NOW()),
+(1, 'FLP 8 Channel Digital Temp. Scanner', 'Eight channel flameproof temperature scanner with auto-scan and individual channel programming. Suitable for multi-point temperature monitoring in pharma plants.', 'flp_8channel_temp_scanner.jpg', 1, NOW()),
+(1, 'FLP Digital Temp. Controller', 'Flameproof digital temperature controller with relay output for precise temperature control in hazardous environments. Features On/Off and PID control modes.', 'flp_digital_temp_controller.jpg', 1, NOW()),
+(1, 'FLP Temp. & RPM Indicator', 'Combined flameproof temperature and RPM indicator for pharmaceutical reactors and agitators. Displays both parameters simultaneously.', 'flp_temp_rpm_indicator.jpg', 1, NOW()),
+(1, 'FLP Digital RPM Indicator', 'Flameproof digital RPM indicator for monitoring agitator and motor speeds in hazardous pharmaceutical manufacturing areas.', 'flp_digital_rpm_indicator.jpg', 1, NOW()),
+(1, 'NFLP Digital Temp. Indicator', 'Non-flameproof digital temperature indicator for safe area temperature monitoring in laboratories and general industrial applications.', 'nflp_digital_temp_indicator.jpg', 1, NOW()),
+(1, 'Panel Mounting Type Digital Temp. Indicator', 'Panel mount digital temperature indicator for control panel integration. DIN rail or cutout mountable with multiple input options.', 'panel_mount_temp_indicator.jpg', 1, NOW()),
+(1, 'Panel Mounting Type Digital Temp. Controller', 'Panel mount digital temperature controller with relay output for process temperature control. Suitable for ovens, furnaces and reactors.', 'panel_mount_temp_controller.jpg', 1, NOW()),
+(1, 'Temp. Datalogger', 'Multi-channel temperature datalogger with PC connectivity and 21CFR Part 11 compliant software option. Ideal for pharma validation and GMP compliance.', 'temp_datalogger.jpg', 1, NOW());
+
+-- ---- TYPE 2: Temperature Sensors ----
+INSERT INTO products (product_type_id, product_name, product_description, image_path, is_active, date_created) VALUES
+(2, 'FLP Temp. Sensors (RTD Pt-100)', 'Flameproof RTD Pt-100 temperature sensors in simplex and duplex configurations. Aluminium LM-6 alloy head certified by CIMFR Dhanbad for Gas Group I, IIA & IIB.', 'flp_rtd_sensor.jpg', 1, NOW()),
+(2, 'Thermocouple Sensors', 'Industrial thermocouple sensors in J, K, T, R and S type configurations with flameproof and weatherproof head options. Available in SS304, SS310 and SS316 sheaths.', 'thermocouple_sensor.jpg', 1, NOW());
+
+-- ---- TYPE 3: Process Indicators ----
+INSERT INTO products (product_type_id, product_name, product_description, image_path, is_active, date_created) VALUES
+(3, 'FLP Digital Pressure Indicator', 'Flameproof digital pressure indicator with 4-20mA input for online pressure measurement in hazardous pharmaceutical and chemical plant environments.', 'flp_pressure_indicator.jpg', 1, NOW()),
+(3, 'FLP Digital Vacuum Indicator', 'Flameproof digital vacuum indicator for monitoring vacuum levels in hazardous area reactors and distillation equipment.', 'flp_vacuum_indicator.jpg', 1, NOW()),
+(3, 'FLP Online Digital pH Meter', 'Flameproof online pH meter for continuous pH monitoring in pharmaceutical reactors and chemical processes in hazardous areas.', 'flp_online_ph_meter.jpg', 1, NOW()),
+(3, 'FLP Online pH Logger', 'Flameproof online pH datalogger with continuous recording and PC connectivity for GMP compliant pharma process monitoring.', 'flp_online_ph_logger.jpg', 1, NOW()),
+(3, 'FLP Digital Temp. Datalogger', 'Flameproof temperature datalogger for multi-point continuous temperature recording in hazardous pharmaceutical manufacturing environments.', 'flp_temp_datalogger.jpg', 1, NOW());
+
+-- ---- TYPE 4: Gauges ----
+INSERT INTO products (product_type_id, product_name, product_description, image_path, is_active, date_created) VALUES
+(4, 'Pressure Gauge', 'Industrial bourdon tube pressure gauge for process pressure measurement. Available in various pressure ranges and dial sizes for pharma and chemical industries.', 'pressure_gauge.jpg', 1, NOW()),
+(4, 'Vacuum Gauge', 'Industrial vacuum gauge for negative pressure measurement in distillation, filtration and drying equipment.', 'vacuum_gauge.jpg', 1, NOW()),
+(4, 'Compound Gauge', 'Combined pressure and vacuum (compound) gauge for measuring both positive and negative pressures. Ideal for reactors and process vessels.', 'compound_gauge.jpg', 1, NOW());
+
+-- ---- TYPE 5: Flameproof Fixtures ----
+INSERT INTO products (product_type_id, product_name, product_description, image_path, is_active, date_created) VALUES
+(5, 'FLP Reactor Vessel Lamps', 'Flameproof lighting fixtures for pharmaceutical reactor vessels. Certified for Zone 1 & 2 hazardous areas, Gas Group IIA & IIB.', 'flp_reactor_vessel_lamp.jpg', 1, NOW()),
+(5, 'FLP Push Button Stations', 'Flameproof push button control stations for start/stop operations in hazardous pharmaceutical and chemical plant environments.', 'flp_push_button_station.jpg', 1, NOW()),
+(5, 'FLP Hooters', 'Flameproof audible alarm hooters for hazardous area warning and signalling in pharmaceutical and industrial plants.', 'flp_hooter.jpg', 1, NOW()),
+(5, 'FLP Well Glass Light Fittings', 'Flameproof well glass light fittings for general illumination in hazardous pharmaceutical manufacturing areas. Certified IP65.', 'flp_well_glass_light.jpg', 1, NOW());
+
+-- ---- TYPE 6: Control Valves ----
+INSERT INTO products (product_type_id, product_name, product_description, image_path, is_active, date_created) VALUES
+(6, 'FLP Control Valves', 'Flameproof pneumatic control valves for precise flow regulation in hazardous pharmaceutical and chemical process environments.', 'flp_control_valve.jpg', 1, NOW());
+
+-- ---- TYPE 7: Laboratory Instruments & Glassware ----
+INSERT INTO products (product_type_id, product_name, product_description, image_path, is_active, date_created) VALUES
+(7, 'UV Cabinet', 'UV detection cabinet for identification of fluorescent compounds in thin layer chromatography (TLC). Features short and long wave UV lamps.', 'uv_cabinet.jpg', 1, NOW()),
+(7, 'KF Titrator', 'Karl Fischer titrator for precise moisture content determination in pharmaceutical raw materials and finished products.', 'kf_titrator.jpg', 1, NOW()),
+(7, 'pH Meter', 'Benchtop laboratory pH meter with high accuracy measurement for QC labs and R&D applications in pharmaceutical industry.', 'ph_meter.jpg', 1, NOW()),
+(7, 'pH Electrodes', 'Laboratory pH electrodes in various configurations for benchtop and portable pH meters. Compatible with all standard pH meters.', 'ph_electrodes.jpg', 1, NOW()),
+(7, 'KF Electrodes', 'Karl Fischer electrodes for moisture titration. Available as platinum double pin and single pin configurations.', 'kf_electrodes.jpg', 1, NOW()),
+(7, 'TDS/Conductivity Cells', 'Conductivity cells for TDS and conductivity measurement in purified water and pharmaceutical process water monitoring.', 'tds_conductivity_cell.jpg', 1, NOW()),
+(7, 'TDS/Conductivity Meter', 'Digital TDS and conductivity meter for water quality monitoring in pharmaceutical purified water systems.', 'tds_conductivity_meter.jpg', 1, NOW()),
+(7, 'Melting Point Apparatus', 'Digital melting point apparatus for determination of melting point of pharmaceutical raw materials and API characterization.', 'melting_point_apparatus.jpg', 1, NOW()),
+(7, 'Heating Mantle', 'Laboratory heating mantle for uniform heating of round bottom flasks. Available in various capacities from 250ml to 50 litres.', 'heating_mantle.jpg', 1, NOW()),
+(7, 'Lab Stirrer', 'Overhead and magnetic laboratory stirrers for mixing and homogenization in pharmaceutical R&D and quality control labs.', 'lab_stirrer.jpg', 1, NOW()),
+(7, 'Hot Air Oven', 'Laboratory hot air oven for drying, sterilization and stability testing. Temperature range up to 250°C with uniform air circulation.', 'hot_air_oven.jpg', 1, NOW()),
+(7, 'Vacuum Oven', 'Laboratory vacuum oven for drying heat-sensitive pharmaceutical materials at low temperatures under vacuum conditions.', 'vacuum_oven.jpg', 1, NOW()),
+(7, 'Lab Glassware', 'Complete range of borosilicate laboratory glassware including beakers, flasks, measuring cylinders and reaction vessels.', 'lab_glassware.jpg', 1, NOW()),
+(7, '50 Ltrs Flask Setup', 'Complete 50 litre glass flask setup with heating mantle, condenser, stirrer and temperature controller for pilot scale reactions.', 'flask_setup_50l.jpg', 1, NOW()),
+(7, '100 Ltrs Flask Setup', 'Complete 100 litre glass flask setup for pharmaceutical pilot batch reactions with full instrumentation support.', 'flask_setup_100l.jpg', 1, NOW()),
+(7, '200 Ltrs Flask Setup', 'Complete 200 litre glass flask setup for scale-up pharmaceutical manufacturing with integrated temperature and stirring control.', 'flask_setup_200l.jpg', 1, NOW());
+
+-- ============================================================
+-- STEP 5: Product Specs (example specs - update with actual values)
+-- Note: Update product_id numbers based on your AUTO_INCREMENT values
+-- Run: SELECT product_id, product_name FROM products; to get actual IDs
+-- ============================================================
+
+-- Use a variable approach to get correct IDs
+SET @flp_indicator_id = (SELECT product_id FROM products WHERE product_name = 'FLP Digital Temp. Indicator' LIMIT 1);
+SET @flp_dual_id = (SELECT product_id FROM products WHERE product_name = 'FLP Dual Point Temp. Indicator' LIMIT 1);
+SET @flp_8ch_id = (SELECT product_id FROM products WHERE product_name = 'FLP 8 Channel Digital Temp. Scanner' LIMIT 1);
+SET @flp_controller_id = (SELECT product_id FROM products WHERE product_name = 'FLP Digital Temp. Controller' LIMIT 1);
+SET @flp_rpm_id = (SELECT product_id FROM products WHERE product_name = 'FLP Temp. & RPM Indicator' LIMIT 1);
+SET @flp_rtd_id = (SELECT product_id FROM products WHERE product_name = 'FLP Temp. Sensors (RTD Pt-100)' LIMIT 1);
+SET @flp_pressure_id = (SELECT product_id FROM products WHERE product_name = 'FLP Digital Pressure Indicator' LIMIT 1);
+SET @flp_ph_id = (SELECT product_id FROM products WHERE product_name = 'FLP Online Digital pH Meter' LIMIT 1);
+SET @uv_cabinet_id = (SELECT product_id FROM products WHERE product_name = 'UV Cabinet' LIMIT 1);
+SET @melting_id = (SELECT product_id FROM products WHERE product_name = 'Melting Point Apparatus' LIMIT 1);
+SET @kf_titrator_id = (SELECT product_id FROM products WHERE product_name = 'KF Titrator' LIMIT 1);
+SET @hot_oven_id = (SELECT product_id FROM products WHERE product_name = 'Hot Air Oven' LIMIT 1);
+
+-- FLP Digital Temp. Indicator specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_indicator_id, 'Measuring Range', '-100.0 to +400.0 Deg. C', 1),
+(@flp_indicator_id, 'Input', 'RTD Pt-100, 3 Wire', 2),
+(@flp_indicator_id, 'Display', '4 Digit Red 7 Segment LED, 1" High Super Bright', 3),
+(@flp_indicator_id, 'Power Supply', '230 VAC ±10%, 50/60 Hz', 4),
+(@flp_indicator_id, 'Accuracy', '+/- 0.1 Deg. C, +/- 1 count', 5),
+(@flp_indicator_id, 'Enclosure', 'Aluminium LM-6 Alloy, IP65, Flameproof', 6),
+(@flp_indicator_id, 'Certification', 'CIMFR Certified, Gas Group IIA & IIB, Zone 1 & 2', 7),
+(@flp_indicator_id, 'Optional', 'RS485 Modbus Communication, 4-20mA Output, Relay Output', 8);
+
+-- FLP Dual Point Temp. Indicator specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_dual_id, 'Channel 1 Range', '-100.0 to +400.0 Deg. C', 1),
+(@flp_dual_id, 'Channel 2 Range', 'Programmable between -999 to +9999', 2),
+(@flp_dual_id, 'Channel 1 Input', 'RTD Pt-100, 3 Wire', 3),
+(@flp_dual_id, 'Channel 2 Input', 'Programmable (RTD/Thermocouple/4-20mA)', 4),
+(@flp_dual_id, 'Display Ch1', '4 Digit Red 7 Segment LED, 0.8" High Super Bright', 5),
+(@flp_dual_id, 'Display Ch2', '4 Digit Red 7 Segment LED, 0.5" High Super Bright', 6),
+(@flp_dual_id, 'Control Type', 'On/Off', 7),
+(@flp_dual_id, 'Power Supply', '230 VAC ±10%, 50/60 Hz', 8),
+(@flp_dual_id, 'Accuracy', '+/- 0.1 Deg. C, +/- 1 count for Temperature | +/- 0.1% FS for Analog 4-20mA', 9),
+(@flp_dual_id, 'Optional Communication', 'RS485 Modbus Communication', 10),
+(@flp_dual_id, 'Enclosure', 'Aluminium LM-6 Alloy, IP65, Flameproof', 11),
+(@flp_dual_id, 'Certification', 'CIMFR Certified, Gas Group IIA & IIB, Zone 1 & 2', 12);
+
+-- FLP 8 Channel Scanner specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_8ch_id, 'Number of Channels', '8 Channels', 1),
+(@flp_8ch_id, 'Input Type', 'Universal: RTD Pt-100, Thermocouple (J/K/T/R/S), 4-20mA', 2),
+(@flp_8ch_id, 'Measuring Range', '-100.0 to +400.0 Deg. C (RTD) | Thermocouple range as per type', 3),
+(@flp_8ch_id, 'Display', '1" High 4 Digit Red LED, Auto Channel Scanning', 4),
+(@flp_8ch_id, 'Scan Time', 'Programmable auto channel change time', 5),
+(@flp_8ch_id, 'Relay Output', 'Programmable relay outputs per channel', 6),
+(@flp_8ch_id, 'Communication', 'RS485 Modbus Communication', 7),
+(@flp_8ch_id, 'Power Supply', '230 VAC ±10%, 50/60 Hz', 8),
+(@flp_8ch_id, 'Enclosure', 'Aluminium LM-6 Alloy, IP65, Flameproof', 9),
+(@flp_8ch_id, 'Certification', 'CIMFR Certified, Gas Group I, IIA & IIB, Zone 1 & 2', 10),
+(@flp_8ch_id, 'Optional', '21CFR Part 11 Compliant Datalogger Software', 11);
+
+-- FLP Digital Temp. Controller specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_controller_id, 'Measuring Range', '-150 Deg. C to +750 Deg. C', 1),
+(@flp_controller_id, 'Input', 'RTD Pt-100 | Thermocouple J, K, T, R, S type', 2),
+(@flp_controller_id, 'Display', '4 Digit Red 7 Segment LED, 1" High', 3),
+(@flp_controller_id, 'Control Type', 'On/Off and PID', 4),
+(@flp_controller_id, 'Relay Output', '1 C/O Relay Contact @ 5 Amps capacity | Optional 2 Relays', 5),
+(@flp_controller_id, 'Power Supply', '230 VAC ±10%, 50/60 Hz', 6),
+(@flp_controller_id, 'Accuracy', '+/- 0.1 Deg. C, +/- 1 count', 7),
+(@flp_controller_id, 'Enclosure', 'Aluminium LM-6 Alloy, IP65, Flameproof', 8),
+(@flp_controller_id, 'Certification', 'CIMFR Certified, Gas Group IIA & IIB, Zone 1 & 2', 9),
+(@flp_controller_id, 'Optional', 'RS485 Modbus, 4-20mA Output, SSR Output', 10);
+
+-- FLP Temp. & RPM Indicator specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_rpm_id, 'Temperature Range', '-100.0 to +400.0 Deg. C', 1),
+(@flp_rpm_id, 'RPM Range', '0 to 9999 RPM (Programmable)', 2),
+(@flp_rpm_id, 'Temperature Input', 'RTD Pt-100, 3 Wire', 3),
+(@flp_rpm_id, 'RPM Input', 'Proximity Sensor / Magnetic Pickup', 4),
+(@flp_rpm_id, 'Display', 'Dual 4 Digit Red LED Display for Temp and RPM', 5),
+(@flp_rpm_id, 'Power Supply', '230 VAC ±10%, 50/60 Hz', 6),
+(@flp_rpm_id, 'Enclosure', 'Aluminium LM-6 Alloy, IP65, Flameproof', 7),
+(@flp_rpm_id, 'Application', 'Pharmaceutical reactors, agitators, bulk drug plants', 8),
+(@flp_rpm_id, 'Certification', 'CIMFR Certified, Gas Group IIA & IIB, Zone 1 & 2', 9);
+
+-- FLP RTD Sensor specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_rtd_id, 'Sensor Type', 'RTD Pt-100, Class A', 1),
+(@flp_rtd_id, 'Configuration', 'Simplex (3 Wire) / Duplex (6 Wire)', 2),
+(@flp_rtd_id, 'Temperature Range', '-200 to +600 Deg. C', 3),
+(@flp_rtd_id, 'Sheath Material', 'Stainless Steel SS316 (SS304/SS310 optional)', 4),
+(@flp_rtd_id, 'Head Material', 'Aluminium LM-6 Alloy, Flameproof', 5),
+(@flp_rtd_id, 'Certification', 'CIMFR Dhanbad Certified, Gas Group I, IIA & IIB', 6),
+(@flp_rtd_id, 'Termination', 'Flameproof Head with Cable Gland', 7),
+(@flp_rtd_id, 'Duplex Feature', 'Provides 2 independent 3-wire outputs for connecting to 2 devices simultaneously', 8);
+
+-- FLP Digital Pressure Indicator specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_pressure_id, 'Input', '4-20mA from Pressure Transmitter', 1),
+(@flp_pressure_id, 'Display Range', '-999 to +9999 counts', 2),
+(@flp_pressure_id, 'Display', '4 Digit Red 7 Segment LED', 3),
+(@flp_pressure_id, 'Resolution', '0.01 / 0.1 / 1 (selectable)', 4),
+(@flp_pressure_id, 'Power Supply', '230 VAC, 50 Hz', 5),
+(@flp_pressure_id, 'Enclosure', 'Aluminium LM-6 Alloy, IP65, Flameproof', 6),
+(@flp_pressure_id, 'Certification', 'CIMFR Certified, Gas Group IIA & IIB, Zone 1 & 2', 7),
+(@flp_pressure_id, 'Optional', 'RS485 Modbus, Relay Output, 4-20mA Retransmission', 8);
+
+-- FLP Online pH Meter specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@flp_ph_id, 'pH Range', '0.00 to 14.00 pH', 1),
+(@flp_ph_id, 'Resolution', '0.01 pH', 2),
+(@flp_ph_id, 'Accuracy', '+/- 0.02 pH', 3),
+(@flp_ph_id, 'Temperature Compensation', 'Automatic (ATC), 0 to 100 Deg. C', 4),
+(@flp_ph_id, 'Display', '4 Digit LED Display', 5),
+(@flp_ph_id, 'Output', '4-20mA Analog Output', 6),
+(@flp_ph_id, 'Power Supply', '230 VAC ±10%, 50/60 Hz', 7),
+(@flp_ph_id, 'Enclosure', 'Aluminium LM-6 Alloy, IP65, Flameproof', 8),
+(@flp_ph_id, 'Certification', 'CIMFR Certified, Gas Group IIA & IIB, Zone 1 & 2', 9);
+
+-- UV Cabinet specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@uv_cabinet_id, 'UV Wavelengths', 'Short Wave: 254 nm | Long Wave: 365 nm', 1),
+(@uv_cabinet_id, 'Application', 'TLC plate visualization, fluorescence detection', 2),
+(@uv_cabinet_id, 'Viewing Area', 'Standard cabinet with dark viewing chamber', 3),
+(@uv_cabinet_id, 'Lamps', 'UV-A and UV-C lamps included', 4),
+(@uv_cabinet_id, 'Power Supply', '230 VAC, 50 Hz', 5),
+(@uv_cabinet_id, 'Construction', 'Powder coated mild steel body', 6);
+
+-- Melting Point Apparatus specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@melting_id, 'Temperature Range', 'Ambient to 300 Deg. C', 1),
+(@melting_id, 'Resolution', '0.1 Deg. C', 2),
+(@melting_id, 'Accuracy', '+/- 0.5 Deg. C', 3),
+(@melting_id, 'Heating Rate', '0.5 to 10 Deg. C per minute (adjustable)', 4),
+(@melting_id, 'Display', 'Digital LED display with capillary tube observation', 5),
+(@melting_id, 'Samples', 'Up to 3 samples simultaneously', 6),
+(@melting_id, 'Power Supply', '230 VAC, 50 Hz', 7),
+(@melting_id, 'Application', 'Pharmaceutical raw material and API characterization', 8);
+
+-- KF Titrator specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@kf_titrator_id, 'Measurement Range', '10 ppm to 100% moisture', 1),
+(@kf_titrator_id, 'Method', 'Karl Fischer Volumetric Titration', 2),
+(@kf_titrator_id, 'Accuracy', '+/- 0.1% of reading', 3),
+(@kf_titrator_id, 'Display', 'Digital display with direct moisture readout', 4),
+(@kf_titrator_id, 'Stirrer', 'Built-in magnetic stirrer', 5),
+(@kf_titrator_id, 'Application', 'Moisture determination in pharmaceutical raw materials', 6),
+(@kf_titrator_id, 'Power Supply', '230 VAC, 50 Hz', 7);
+
+-- Hot Air Oven specs
+INSERT INTO product_specs (product_id, spec_name, spec_value, display_order) VALUES
+(@hot_oven_id, 'Temperature Range', 'Ambient +10 to 250 Deg. C', 1),
+(@hot_oven_id, 'Temperature Control', 'Digital PID controller', 2),
+(@hot_oven_id, 'Accuracy', '+/- 1 Deg. C', 3),
+(@hot_oven_id, 'Air Circulation', 'Forced air circulation for uniform temperature', 4),
+(@hot_oven_id, 'Construction', 'Double wall, inner SS304, outer MS powder coated', 5),
+(@hot_oven_id, 'Shelves', 'Adjustable SS perforated shelves', 6),
+(@hot_oven_id, 'Power Supply', '230 VAC, 50 Hz', 7),
+(@hot_oven_id, 'Application', 'Drying, sterilization and stability testing', 8);
+
+-- ============================================================
+-- VERIFY: Check counts
+-- ============================================================
+SELECT 'Product Types' AS table_name, COUNT(*) AS total FROM product_types
+UNION ALL
+SELECT 'Products', COUNT(*) FROM products
+UNION ALL
+SELECT 'Product Specs', COUNT(*) FROM product_specs;

@@ -3,8 +3,12 @@
   padding: 1rem;
 }
 
+.dropdown-item{
+  font-weight:bold;
+}
 .dropdown-item:hover {
-  background-color: #f8f9fa;
+  background-color: #770202;
+  color: #fff;
 }
 
 .dropdown-header {

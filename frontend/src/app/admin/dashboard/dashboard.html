@@ -1,0 +1,88 @@
+<div class="page-header">
+  <div>
+    <h4 class="page-title">Dashboard</h4>
+    <p class="page-subtitle">Welcome to the Arrow Instruments admin panel</p>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-danger" role="status"></div>
+  <p class="mt-2 text-muted">Loading...</p>
+</div>
+
+<!-- Stats Cards -->
+<div *ngIf="!loading" class="stats-grid">
+
+  <div class="stat-card">
+    <div class="stat-icon icon-blue">
+      <i class="fa-solid fa-layer-group"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ stats.productTypes }}</div>
+      <div class="stat-label">Product Types</div>
+    </div>
+    <a routerLink="/admin/product-types" class="stat-link">
+      Manage <i class="fa-solid fa-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon icon-green">
+      <i class="fa-solid fa-box"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ stats.products }}</div>
+      <div class="stat-label">Total Products</div>
+    </div>
+    <a routerLink="/admin/products" class="stat-link">
+      Manage <i class="fa-solid fa-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon icon-purple">
+      <i class="fa-solid fa-envelope"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ stats.totalEnquiries }}</div>
+      <div class="stat-label">Total Enquiries</div>
+    </div>
+    <a routerLink="/admin/enquiries" class="stat-link">
+      View all <i class="fa-solid fa-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="stat-card" [class.highlight]="stats.newEnquiries > 0">
+    <div class="stat-icon icon-red">
+      <i class="fa-solid fa-bell"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ stats.newEnquiries }}</div>
+      <div class="stat-label">New Enquiries</div>
+    </div>
+    <a routerLink="/admin/enquiries" class="stat-link">
+      Review <i class="fa-solid fa-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+</div>
+
+<!-- Quick Links -->
+<div *ngIf="!loading" class="quick-links mt-4">
+  <h6 class="section-title">Quick Actions</h6>
+  <div class="quick-grid">
+    <a routerLink="/admin/product-types" class="quick-card">
+      <i class="fa-solid fa-plus-circle"></i>
+      <span>Add Product Type</span>
+    </a>
+    <a routerLink="/admin/products" class="quick-card">
+      <i class="fa-solid fa-box-open"></i>
+      <span>Add Product</span>
+    </a>
+    <a routerLink="/admin/enquiries" class="quick-card">
+      <i class="fa-solid fa-inbox"></i>
+      <span>Check Enquiries</span>
+    </a>
+  </div>
+</div>

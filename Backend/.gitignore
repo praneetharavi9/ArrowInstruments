@@ -70,6 +70,6 @@ artifacts/
 *.backup
 *.sw*
 
-# Configuration files
-appsettings.json
-appsettings.*.json
+# Secret config overrides — base appsettings.json (placeholders only) IS committed.
+appsettings.Development.json
+appsettings.Production.json

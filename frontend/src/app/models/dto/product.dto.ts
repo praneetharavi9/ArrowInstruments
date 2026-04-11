@@ -1,3 +1,5 @@
+import { ProductSpecDto } from './product-spec.dto';
+
 export interface ProductDto {
   productId: number;
   productTypeId: number;
@@ -7,4 +9,5 @@ export interface ProductDto {
   isActive: boolean;
   dateCreated: string;
   dateUpdated?: string | null;
+  specs: ProductSpecDto[];
 }

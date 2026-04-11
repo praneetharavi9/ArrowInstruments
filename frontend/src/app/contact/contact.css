@@ -1,18 +1,79 @@
-form{
+form {
     background-color: #f0d0c9;
     padding: 2rem;
 }
-.submit-btn{
-    background-color: #770202 ;
+
+.submit-btn {
+    background-color: #770202;
     color: #fff;
     font-weight: bold;
 }
 
-.contact-header, .contact-from-header, .address-header{
-    font-family: 'Abril fatface';
+.submit-btn:hover {
+    background-color: #550101;
+    color: #fff;
 }
 
-.address-text{
+.contact-header,
+.contact-from-header,
+.address-header {
+    font-family: 'Abril Fatface';
+}
+
+.address-text {
     font-family: 'Abril Fatface';
     color: #770202;
+}
+
+/* Success Box — same size and background as the form */
+.success-box {
+    background-color: #f0d0c9;
+    padding: 2rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.success-icon {
+    font-size: 3.5rem;
+    color: #770202;
+    margin-bottom: 1rem;
+}
+
+.success-title {
+    font-family: 'Abril Fatface';
+    color: #770202;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+}
+
+.success-message {
+    font-size: 1rem;
+    color: #333;
+    line-height: 1.7;
+    margin-bottom: 0.5rem;
+}
+
+.success-sub {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 1rem;
+}
+
+.another-btn {
+    background-color: transparent;
+    border: 2px solid #770202;
+    color: #770202;
+    font-weight: bold;
+    padding: 8px 24px;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.another-btn:hover {
+    background-color: #770202;
+    color: #fff;
 }

@@ -1,0 +1,163 @@
+<div class="page-header">
+  <div>
+    <h4 class="page-title">Enquiries</h4>
+    <p class="page-subtitle">Customer messages and contact form submissions</p>
+  </div>
+  <button class="btn btn-outline-secondary btn-sm" (click)="loadEnquiries()" title="Refresh">
+    <i class="fa-solid fa-arrows-rotate me-1"></i>Refresh
+  </button>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-danger" role="status"></div>
+  <p class="mt-2 text-muted">Loading enquiries...</p>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && enquiries.length === 0" class="empty-state">
+  <i class="fa-solid fa-inbox"></i>
+  <h5>No enquiries yet</h5>
+  <p>Customer messages will appear here when they submit the contact form.</p>
+</div>
+
+<!-- Table -->
+<div *ngIf="!loading && enquiries.length > 0" class="table-card">
+  <table class="table admin-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Message</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let enquiry of enquiries" [class.row-new]="enquiry.status === 'new'">
+        <td class="fw-semibold">
+          {{ enquiry.name }}
+          <div *ngIf="enquiry.companyName" class="text-muted small">{{ enquiry.companyName }}</div>
+        </td>
+        <td><a [href]="'mailto:' + enquiry.email" class="text-link">{{ enquiry.email }}</a></td>
+        <td class="text-muted">{{ enquiry.phone || '—' }}</td>
+        <td class="text-muted msg-preview">
+          {{ enquiry.message.length > 60 ? enquiry.message.slice(0, 60) + '…' : enquiry.message }}
+        </td>
+        <td class="text-muted small">{{ enquiry.submittedAt | date:'dd MMM yyyy' }}</td>
+        <td>
+          <span [class]="statusBadgeClass(enquiry.status)">{{ statusLabel(enquiry.status) }}</span>
+        </td>
+        <td>
+          <button class="btn btn-view btn-sm me-1" (click)="viewEnquiry(enquiry)" title="View full message">
+            <i class="fa-solid fa-eye me-1"></i>View
+          </button>
+          <button
+            *ngIf="enquiry.status !== 'responded'"
+            class="btn btn-responded btn-sm me-1"
+            (click)="markResponded(enquiry)"
+            title="Mark as Responded">
+            <i class="fa-solid fa-check me-1"></i>Responded
+          </button>
+          <button class="btn btn-delete btn-sm" (click)="confirmDelete(enquiry.id)" title="Delete">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Detail Modal ───────────────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showDetailModal && selectedEnquiry">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-envelope-open me-2" style="color:#770202"></i>
+          Enquiry from {{ selectedEnquiry.name }}
+        </h5>
+        <button class="btn-close" (click)="closeDetailModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label"><i class="fa-solid fa-user me-2"></i>Name</span>
+            <span>{{ selectedEnquiry.name }}</span>
+          </div>
+          <div class="detail-row" *ngIf="selectedEnquiry.companyName">
+            <span class="detail-label"><i class="fa-solid fa-building me-2"></i>Company</span>
+            <span>{{ selectedEnquiry.companyName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label"><i class="fa-solid fa-envelope me-2"></i>Email</span>
+            <a [href]="'mailto:' + selectedEnquiry.email">{{ selectedEnquiry.email }}</a>
+          </div>
+          <div class="detail-row" *ngIf="selectedEnquiry.phone">
+            <span class="detail-label"><i class="fa-solid fa-phone me-2"></i>Phone</span>
+            <a [href]="'tel:' + selectedEnquiry.phone">{{ selectedEnquiry.phone }}</a>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label"><i class="fa-solid fa-calendar me-2"></i>Received</span>
+            <span>{{ selectedEnquiry.submittedAt | date:'dd MMMM yyyy, hh:mm a' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label"><i class="fa-solid fa-circle-info me-2"></i>Status</span>
+            <span [class]="statusBadgeClass(selectedEnquiry.status)">{{ statusLabel(selectedEnquiry.status) }}</span>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="message-section">
+          <h6 class="message-label">Message</h6>
+          <div class="message-body">{{ selectedEnquiry.message }}</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDetailModal()">Close</button>
+        <button
+          *ngIf="selectedEnquiry.status !== 'responded'"
+          class="btn btn-responded"
+          (click)="markResponded(selectedEnquiry)">
+          <i class="fa-solid fa-check me-2"></i>Mark as Responded
+        </button>
+        <a [href]="'mailto:' + selectedEnquiry.email" class="btn btn-primary">
+          <i class="fa-solid fa-reply me-2"></i>Reply via Email
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirm Modal ───────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showDeleteConfirm">
+  <div class="modal-dialog modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Enquiry
+        </h5>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to permanently delete this enquiry?</p>
+        <p class="text-muted small">This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button class="btn btn-danger" (click)="doDelete()" [disabled]="deleteLoading">
+          <span *ngIf="deleteLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ deleteLoading ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
