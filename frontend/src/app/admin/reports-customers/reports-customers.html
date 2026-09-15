@@ -1,0 +1,53 @@
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb-nav">
+      <span>Reports</span>
+      <i class="fa-solid fa-angle-right"></i>
+      <span class="current">Customers</span>
+    </nav>
+    <h4 class="page-title">Customer Report</h4>
+    <p class="page-subtitle">Outstanding balances by customer for the selected period</p>
+  </div>
+  <app-date-range-filter
+    [startDate]="startDate"
+    [endDate]="endDate"
+    (rangeChange)="onRangeChange($event)">
+  </app-date-range-filter>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-danger" role="status"></div>
+  <p class="mt-2 text-muted">Loading report...</p>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && rows.length === 0" class="empty-state">
+  <i class="fa-solid fa-chart-line"></i>
+  <h5>No customer activity</h5>
+  <p>No companies or ledger entries found for the selected period.</p>
+</div>
+
+<!-- Table -->
+<div *ngIf="!loading && rows.length > 0" class="table-card">
+  <table class="table admin-table">
+    <thead>
+      <tr>
+        <th>Account Name</th>
+        <th class="text-end">Open (₹)</th>
+        <th class="text-end">Debit (₹)</th>
+        <th class="text-end">Credit (₹)</th>
+        <th class="text-end">Balance (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of rows" class="clickable-row" (click)="openDetail(row)">
+        <td class="fw-semibold">{{ row.companyName }}</td>
+        <td class="text-end">{{ row.open | number:'1.2-2' }}</td>
+        <td class="text-end">{{ row.debit | number:'1.2-2' }}</td>
+        <td class="text-end">{{ row.credit | number:'1.2-2' }}</td>
+        <td class="text-end fw-semibold">{{ row.balance | number:'1.2-2' }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

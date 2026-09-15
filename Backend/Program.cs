@@ -3,6 +3,7 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Repository;
 using Backend.Repository.Interfaces;
+using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -30,6 +31,10 @@ builder.Services.Configure<EmailSettings>(
 builder.Services.Configure<FtpSettings>(
     builder.Configuration.GetSection("FtpSettings")
 );
+
+// ── Reminders (email reminders + recurring schedules) ──────────────────────────
+builder.Services.AddScoped<ReminderService>();
+builder.Services.AddHostedService<ReminderSchedulerService>();
 
 // ── JWT settings ──────────────────────────────────────────────────────────────
 // Override with JWT_SECRET environment variable in production.

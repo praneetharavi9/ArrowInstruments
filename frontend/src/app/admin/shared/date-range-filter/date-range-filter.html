@@ -1,0 +1,29 @@
+<div class="date-filter">
+  <div class="date-range-display">
+    <i class="fa-solid fa-calendar-days me-2"></i>
+    <span>{{ startDate | date:'dd MMM yyyy' }} - {{ endDate | date:'dd MMM yyyy' }}</span>
+  </div>
+  <div class="filter-btn-wrap">
+    <button class="btn btn-outline-secondary btn-sm" (click)="togglePanel()">
+      <i class="fa-solid fa-filter me-1"></i>Filter
+    </button>
+    <div class="filter-backdrop" *ngIf="showPanel" (click)="closePanel()"></div>
+    <div class="filter-panel" *ngIf="showPanel" (click)="$event.stopPropagation()">
+      <div class="preset-row">
+        <button class="btn btn-sm btn-light" (click)="applyPreset('today')">Today</button>
+        <button class="btn btn-sm btn-light" (click)="applyPreset('week')">This Week</button>
+        <button class="btn btn-sm btn-light" (click)="applyPreset('month')">This Month</button>
+        <button class="btn btn-sm btn-light" (click)="applyPreset('year')">This Year</button>
+      </div>
+      <div class="mb-2">
+        <label class="form-label small mb-1">From</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="draftStart">
+      </div>
+      <div class="mb-2">
+        <label class="form-label small mb-1">To</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="draftEnd">
+      </div>
+      <button class="btn btn-sm btn-apply w-100" (click)="applyCustom()">Apply</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,415 @@
+<div class="page-header">
+  <nav class="breadcrumb-nav">
+    <span>Reports</span>
+    <i class="fa-solid fa-angle-right"></i>
+    <span class="link" (click)="backToList()">Customers</span>
+    <i class="fa-solid fa-angle-right"></i>
+    <span class="current">{{ companyName }}</span>
+  </nav>
+  <app-date-range-filter
+    [startDate]="startDate"
+    [endDate]="endDate"
+    (rangeChange)="onRangeChange($event)">
+  </app-date-range-filter>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-danger" role="status"></div>
+  <p class="mt-2 text-muted">Loading ledger...</p>
+</div>
+
+<div *ngIf="!loading">
+  <h3 class="account-name-heading">{{ companyName }}</h3>
+
+  <div class="summary-row">
+    <button class="btn btn-reminder" (click)="openSendReminder()">
+      <i class="fa-solid fa-envelope me-2"></i>Send Email Reminder
+    </button>
+    <button class="btn btn-schedule" (click)="openScheduleReminders()">
+      <i class="fa-solid fa-clock-rotate-left me-2"></i>Schedule Reminders
+    </button>
+    <button class="btn btn-add" (click)="openAddEntry()">
+      <i class="fa-solid fa-plus me-2"></i>Add Entry
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <table class="table admin-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Trans No.</th>
+          <th>Particulars</th>
+          <th class="text-end">Debit (₹)</th>
+          <th class="text-end">Credit (₹)</th>
+          <th class="text-end">Balance (₹)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="opening-row">
+          <td>—</td>
+          <td>Op.Bal</td>
+          <td>—</td>
+          <td class="fw-semibold">Opening Balance</td>
+          <td class="text-end">—</td>
+          <td class="text-end">—</td>
+          <td class="text-end fw-semibold">{{ openingBalance | number:'1.2-2' }}</td>
+          <td>
+            <div class="btn-actions">
+              <button class="btn btn-edit btn-sm" (click)="openEditOpeningBalance()">
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngFor="let row of rows">
+          <td>{{ row.date | date:'dd MMM yyyy' }}</td>
+          <td>{{ row.type || '—' }}</td>
+          <td>{{ row.transNo || '—' }}</td>
+          <td class="text-muted">{{ row.description || '—' }}</td>
+          <td class="text-end">{{ row.debit | number:'1.2-2' }}</td>
+          <td class="text-end">{{ row.credit | number:'1.2-2' }}</td>
+          <td class="text-end fw-semibold">{{ row.balance | number:'1.2-2' }}</td>
+          <td>
+            <div class="btn-actions">
+              <button class="btn btn-edit btn-sm" (click)="openEditEntry(row)">
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+              <button class="btn btn-delete btn-sm" (click)="confirmDelete(row)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="rows.length === 0">
+          <td colspan="8" class="text-center text-muted py-4">No transactions for the selected period.</td>
+        </tr>
+        <tr class="total-row">
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td class="fw-semibold">Current Total</td>
+          <td class="text-end fw-semibold">{{ totalDebit | number:'1.2-2' }}</td>
+          <td class="text-end fw-semibold">{{ totalCredit | number:'1.2-2' }}</td>
+          <td class="text-end">—</td>
+          <td></td>
+        </tr>
+        <tr class="closing-row">
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td class="fw-semibold">Credit Balance</td>
+          <td class="text-end">—</td>
+          <td class="text-end">—</td>
+          <td class="text-end fw-semibold">{{ closingBalance | number:'1.2-2' }}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Entry Modal -->
+<div class="modal-backdrop-overlay" *ngIf="showEntryModal" (click)="closeEntryModal()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showEntryModal">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ entryMode === 'add' ? 'Add Entry' : (formType === 'opening' ? 'Edit Opening Balance' : 'Edit Entry') }}
+        </h5>
+        <button class="btn-close" (click)="closeEntryModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="formError" class="alert alert-danger py-2">{{ formError }}</div>
+
+        <div class="mb-3" *ngIf="formType !== 'opening'">
+          <label class="form-label required-label">Date</label>
+          <input type="date" class="form-control" [(ngModel)]="formDate">
+        </div>
+
+        <div class="mb-3" *ngIf="formType !== 'opening'">
+          <label class="form-label">Particulars <span class="text-muted">(optional)</span></label>
+          <input type="text" class="form-control" [(ngModel)]="formDescription" placeholder="e.g. Invoice #1023" maxlength="255">
+        </div>
+
+        <div class="row" *ngIf="formType !== 'opening'">
+          <div class="mb-3 col-6">
+            <label class="form-label">Type <span class="text-muted">(optional)</span></label>
+            <input type="text" class="form-control" [(ngModel)]="formVoucherType" placeholder="e.g. Rcpt, Pymt, Cash" maxlength="50">
+          </div>
+          <div class="mb-3 col-6">
+            <label class="form-label">Trans No. <span class="text-muted">(optional)</span></label>
+            <input type="text" class="form-control" [(ngModel)]="formTransNo" placeholder="e.g. RCPT13/22-23" maxlength="50">
+          </div>
+        </div>
+
+        <div class="mb-3" *ngIf="!openingBalanceOnly">
+          <label class="form-label required-label">Entry Type</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="entryType" id="typeDebit" value="debit" [(ngModel)]="formType">
+              <label class="form-check-label" for="typeDebit">Debit</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="entryType" id="typeCredit" value="credit" [(ngModel)]="formType">
+              <label class="form-check-label" for="typeCredit">Credit</label>
+            </div>
+            <div class="form-check" *ngIf="editingEntryId === null">
+              <input class="form-check-input" type="radio" name="entryType" id="typeOpening" value="opening" [(ngModel)]="formType">
+              <label class="form-check-label" for="typeOpening">Opening Balance</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label required-label">Amount (₹)</label>
+          <input type="number" class="form-control" [(ngModel)]="formAmount" [attr.min]="formType === 'opening' ? null : 0" step="0.01">
+          <div class="form-text" *ngIf="formType === 'opening' && entryMode === 'add'">
+            This is added to the existing opening balance, not a new row.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEntryModal()">Cancel</button>
+        <button class="btn btn-save" (click)="saveEntry()" [disabled]="formLoading">
+          <span *ngIf="formLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ formLoading ? 'Saving...' : 'Save Entry' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-backdrop-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showDeleteConfirm">
+  <div class="modal-dialog modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Entry
+        </h5>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this entry?</p>
+        <p class="text-danger small"><i class="fa-solid fa-triangle-exclamation me-1"></i>This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button class="btn btn-danger" (click)="doDelete()" [disabled]="deleteLoading">
+          <span *ngIf="deleteLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ deleteLoading ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Send Email Reminder Modal -->
+<div class="modal-backdrop-overlay" *ngIf="showSendModal" (click)="closeSendModal()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showSendModal">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Email Reminder</h5>
+        <button class="btn-close" (click)="closeSendModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="sendError" class="alert alert-danger py-2">{{ sendError }}</div>
+
+        <div class="mb-3">
+          <label class="form-label required-label">To</label>
+          <div class="email-chip-list" *ngIf="companyEmails.length > 0">
+            <span *ngFor="let email of companyEmails" class="email-chip" [class.selected]="sendTo.includes(email)" (click)="toggleEmail(sendTo, email)">
+              {{ email }}
+            </span>
+          </div>
+          <p class="text-muted small mb-2" *ngIf="companyEmails.length === 0">No saved emails for this company yet — add one below.</p>
+          <div class="input-group input-group-sm">
+            <input type="email" class="form-control" placeholder="Add an email address" [(ngModel)]="sendToInput" (keydown.enter)="$event.preventDefault(); sendToInput = addEmailFromInput(sendTo, sendToInput)">
+            <button class="btn btn-outline-secondary" type="button" (click)="sendToInput = addEmailFromInput(sendTo, sendToInput)">
+              <i class="fa-solid fa-plus"></i> Add
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Cc <span class="text-muted">(optional)</span></label>
+          <div class="email-chip-list" *ngIf="companyEmails.length > 0">
+            <span *ngFor="let email of companyEmails" class="email-chip" [class.selected]="sendCc.includes(email)" (click)="toggleEmail(sendCc, email)">
+              {{ email }}
+            </span>
+          </div>
+          <div class="input-group input-group-sm">
+            <input type="email" class="form-control" placeholder="Add an email address" [(ngModel)]="sendCcInput" (keydown.enter)="$event.preventDefault(); sendCcInput = addEmailFromInput(sendCc, sendCcInput)">
+            <button class="btn btn-outline-secondary" type="button" (click)="sendCcInput = addEmailFromInput(sendCc, sendCcInput)">
+              <i class="fa-solid fa-plus"></i> Add
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label required-label">Subject</label>
+          <input type="text" class="form-control" [(ngModel)]="sendSubject" maxlength="255">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Message</label>
+          <textarea class="form-control" rows="6" [(ngModel)]="sendBody"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Attachments <span class="text-muted">(optional)</span></label>
+          <input type="file" class="form-control" multiple (change)="onFilesSelected($event, sendFiles)">
+          <ul class="attachment-list" *ngIf="sendFiles.length > 0">
+            <li *ngFor="let file of sendFiles; let i = index">
+              <i class="fa-solid fa-paperclip me-1"></i>{{ file.name }}
+              <button type="button" class="btn-remove-file" (click)="removeFile(sendFiles, i)"><i class="fa-solid fa-xmark"></i></button>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeSendModal()">Cancel</button>
+        <button class="btn btn-save" (click)="submitSendReminder()" [disabled]="sendLoading">
+          <span *ngIf="sendLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ sendLoading ? 'Sending...' : 'Send Email' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Reminders Modal -->
+<div class="modal-backdrop-overlay" *ngIf="showScheduleModal" (click)="closeScheduleModal()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showScheduleModal">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Schedule Reminders</h5>
+        <button class="btn-close" (click)="closeScheduleModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="scheduleError" class="alert alert-danger py-2">{{ scheduleError }}</div>
+
+        <div class="row">
+          <div class="mb-3 col-md-4">
+            <label class="form-label required-label">Frequency</label>
+            <select class="form-select" [(ngModel)]="scheduleFrequency">
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          <div class="mb-3 col-md-4">
+            <label class="form-label required-label">Start Date</label>
+            <input type="date" class="form-control" [(ngModel)]="scheduleStartDate">
+          </div>
+          <div class="mb-3 col-md-4">
+            <label class="form-label">End Date <span class="text-muted">(optional)</span></label>
+            <input type="date" class="form-control" [(ngModel)]="scheduleEndDate">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label required-label">To</label>
+          <div class="email-chip-list" *ngIf="companyEmails.length > 0">
+            <span *ngFor="let email of companyEmails" class="email-chip" [class.selected]="scheduleTo.includes(email)" (click)="toggleEmail(scheduleTo, email)">
+              {{ email }}
+            </span>
+          </div>
+          <p class="text-muted small mb-2" *ngIf="companyEmails.length === 0">No saved emails for this company yet — add one below.</p>
+          <div class="input-group input-group-sm">
+            <input type="email" class="form-control" placeholder="Add an email address" [(ngModel)]="scheduleToInput" (keydown.enter)="$event.preventDefault(); scheduleToInput = addEmailFromInput(scheduleTo, scheduleToInput)">
+            <button class="btn btn-outline-secondary" type="button" (click)="scheduleToInput = addEmailFromInput(scheduleTo, scheduleToInput)">
+              <i class="fa-solid fa-plus"></i> Add
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Cc <span class="text-muted">(optional)</span></label>
+          <div class="email-chip-list" *ngIf="companyEmails.length > 0">
+            <span *ngFor="let email of companyEmails" class="email-chip" [class.selected]="scheduleCc.includes(email)" (click)="toggleEmail(scheduleCc, email)">
+              {{ email }}
+            </span>
+          </div>
+          <div class="input-group input-group-sm">
+            <input type="email" class="form-control" placeholder="Add an email address" [(ngModel)]="scheduleCcInput" (keydown.enter)="$event.preventDefault(); scheduleCcInput = addEmailFromInput(scheduleCc, scheduleCcInput)">
+            <button class="btn btn-outline-secondary" type="button" (click)="scheduleCcInput = addEmailFromInput(scheduleCc, scheduleCcInput)">
+              <i class="fa-solid fa-plus"></i> Add
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label required-label">Subject</label>
+          <input type="text" class="form-control" [(ngModel)]="scheduleSubject" maxlength="255">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label required-label">Message</label>
+          <textarea class="form-control" rows="5" [(ngModel)]="scheduleBody"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Attachments <span class="text-muted">(optional)</span></label>
+          <input type="file" class="form-control" multiple (change)="onFilesSelected($event, scheduleFiles)">
+          <ul class="attachment-list" *ngIf="scheduleFiles.length > 0">
+            <li *ngFor="let file of scheduleFiles; let i = index">
+              <i class="fa-solid fa-paperclip me-1"></i>{{ file.name }}
+              <button type="button" class="btn-remove-file" (click)="removeFile(scheduleFiles, i)"><i class="fa-solid fa-xmark"></i></button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="text-end mb-4">
+          <button class="btn btn-save" (click)="submitCreateSchedule()" [disabled]="scheduleLoading">
+            <span *ngIf="scheduleLoading" class="spinner-border spinner-border-sm me-2"></span>
+            {{ scheduleLoading ? 'Saving...' : 'Create Schedule' }}
+          </button>
+        </div>
+
+        <hr>
+
+        <h6 class="mb-3">Existing Schedules</h6>
+        <div *ngIf="schedulesLoading" class="text-center py-3 text-muted">
+          <div class="spinner-border spinner-border-sm text-danger me-2"></div>Loading schedules...
+        </div>
+        <div *ngIf="!schedulesLoading && schedules.length === 0" class="text-muted small">No reminder schedules yet.</div>
+        <ul class="schedule-list" *ngIf="!schedulesLoading && schedules.length > 0">
+          <li *ngFor="let s of schedules" [class.inactive]="!s.isActive">
+            <div class="schedule-info">
+              <strong>{{ s.subject }}</strong>
+              <span class="badge-freq">{{ s.frequency }}</span>
+              <span class="text-muted small d-block">
+                To: {{ s.to.join(', ') }}<span *ngIf="s.cc.length"> · Cc: {{ s.cc.join(', ') }}</span>
+              </span>
+              <span class="text-muted small d-block">
+                Starts {{ s.startDate | date:'dd MMM yyyy' }}<span *ngIf="s.endDate"> · Ends {{ s.endDate | date:'dd MMM yyyy' }}</span>
+                · Next run {{ s.nextRunAt | date:'dd MMM yyyy' }}
+                <span *ngIf="!s.isActive"> · Paused</span>
+              </span>
+            </div>
+            <div class="schedule-actions">
+              <button class="btn btn-sm btn-outline-secondary" (click)="toggleScheduleActive(s)">
+                {{ s.isActive ? 'Pause' : 'Resume' }}
+              </button>
+              <button class="btn btn-delete btn-sm" (click)="deleteScheduleRow(s)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeScheduleModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

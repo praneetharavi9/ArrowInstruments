@@ -6,6 +6,9 @@ import { DashboardComponent } from './dashboard/dashboard';
 import { ProductTypesComponent } from './product-types/product-types';
 import { AdminProductsComponent } from './admin-products/admin-products';
 import { EnquiriesComponent } from './enquiries/enquiries';
+import { Companies } from './companies/companies';
+import { ReportsCustomersComponent } from './reports-customers/reports-customers';
+import { ReportsCustomerDetailComponent } from './reports-customer-detail/reports-customer-detail';
 import { authGuard } from './guards/auth.guard';
 
 const routes: Routes = [
@@ -19,7 +22,10 @@ const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'product-types', component: ProductTypesComponent },
       { path: 'products', component: AdminProductsComponent },
-      { path: 'enquiries', component: EnquiriesComponent }
+      { path: 'enquiries', component: EnquiriesComponent },
+      { path: 'companies', component: Companies },
+      { path: 'reports/customers', component: ReportsCustomersComponent },
+      { path: 'reports/customers/:id', component: ReportsCustomerDetailComponent }
     ]
   }
 ];

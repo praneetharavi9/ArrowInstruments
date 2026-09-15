@@ -1,0 +1,104 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.breadcrumb-nav {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.breadcrumb-nav i {
+  margin: 0 6px;
+  font-size: 10px;
+}
+
+.breadcrumb-nav .current {
+  color: #770202;
+  font-weight: 600;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+}
+
+.page-subtitle {
+  color: #888;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Table */
+.table-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eee;
+  overflow-x: auto;
+}
+
+.admin-table {
+  margin: 0;
+}
+
+.admin-table thead th {
+  background: #f8f9fa;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 16px;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  padding: 13px 16px;
+  vertical-align: middle;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background: #fff5f5;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 10px;
+  border: 1px dashed #ccc;
+  color: #888;
+}
+
+.empty-state i {
+  font-size: 42px;
+  margin-bottom: 14px;
+  color: #ccc;
+  display: block;
+}
+
+.empty-state h5 {
+  color: #555;
+  margin-bottom: 8px;
+}

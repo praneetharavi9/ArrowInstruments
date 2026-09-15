@@ -1,0 +1,327 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.breadcrumb-nav {
+  font-size: 13px;
+  color: #888;
+}
+
+.breadcrumb-nav i {
+  margin: 0 6px;
+  font-size: 10px;
+}
+
+.breadcrumb-nav .link {
+  cursor: pointer;
+  color: #007bff;
+}
+
+.breadcrumb-nav .link:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-nav .current {
+  color: #770202;
+  font-weight: 600;
+}
+
+.account-name-heading {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 8px 0 20px;
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.opening-row {
+  background: #f8f9fa;
+  font-style: italic;
+}
+
+.opening-row td {
+  border-bottom: 2px solid #ddd !important;
+}
+
+.total-row {
+  background: #f8f9fa;
+  font-style: italic;
+}
+
+.total-row td {
+  border-top: 2px solid #ddd !important;
+}
+
+.closing-row {
+  background: #f8f9fa;
+  font-style: italic;
+}
+
+/* Buttons */
+.btn-add {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.btn-add:hover {
+  background: #1e7e34;
+  color: white;
+}
+
+.btn-reminder {
+  background: #0d6efd;
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.btn-reminder:hover {
+  background: #0a58ca;
+  color: white;
+}
+
+.btn-schedule {
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.btn-schedule:hover {
+  background: #59339e;
+  color: white;
+}
+
+/* Recipient picker */
+.email-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.email-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  color: #555;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.email-chip:hover {
+  border-color: #bbb;
+}
+
+.email-chip.selected {
+  background: #770202;
+  border-color: #770202;
+  color: white;
+}
+
+/* Attachments */
+.attachment-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+}
+
+.attachment-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.btn-remove-file {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Reminder schedules list */
+.schedule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.schedule-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.schedule-list li.inactive {
+  opacity: 0.6;
+}
+
+.schedule-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.badge-freq {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #eef1ff;
+  color: #4a4ac0;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.schedule-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-edit {
+  background: #007bff;
+  color: white;
+  border: none;
+  font-size: 13px;
+}
+
+.btn-edit:hover {
+  background: #0056b3;
+  color: white;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  border: none;
+  font-size: 13px;
+}
+
+.btn-delete:hover {
+  background: #b02a37;
+  color: white;
+}
+
+.btn-save {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #1e7e34;
+  color: white;
+}
+
+.btn-save:disabled {
+  background: #80c89a;
+  color: white;
+}
+
+/* Table */
+.table-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eee;
+  overflow-x: auto;
+}
+
+.admin-table {
+  margin: 0;
+}
+
+.admin-table thead th {
+  background: #f8f9fa;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 16px;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  padding: 13px 16px;
+  vertical-align: middle;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Form */
+.required-label::after {
+  content: ' *';
+  color: #dc3545;
+}
+
+/* Modal backdrop */
+.modal-backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1040;
+}
+
+.modal {
+  z-index: 1050;
+}

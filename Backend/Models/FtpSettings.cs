@@ -7,5 +7,6 @@ namespace Backend.Models
         public string User { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string RemotePath { get; set; } = "/public_html/product_images/";
+        public string ReminderAttachmentsPath { get; set; } = "/public_html/reminder_attachments/";
     }
 }

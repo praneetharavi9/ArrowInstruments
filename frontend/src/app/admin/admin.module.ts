@@ -9,6 +9,10 @@ import { DashboardComponent } from './dashboard/dashboard';
 import { ProductTypesComponent } from './product-types/product-types';
 import { AdminProductsComponent } from './admin-products/admin-products';
 import { EnquiriesComponent } from './enquiries/enquiries';
+import { Companies } from './companies/companies';
+import { DateRangeFilter } from './shared/date-range-filter/date-range-filter';
+import { ReportsCustomersComponent } from './reports-customers/reports-customers';
+import { ReportsCustomerDetailComponent } from './reports-customer-detail/reports-customer-detail';
 
 @NgModule({
   declarations: [
@@ -17,7 +21,11 @@ import { EnquiriesComponent } from './enquiries/enquiries';
     DashboardComponent,
     ProductTypesComponent,
     AdminProductsComponent,
-    EnquiriesComponent
+    EnquiriesComponent,
+    Companies,
+    DateRangeFilter,
+    ReportsCustomersComponent,
+    ReportsCustomerDetailComponent
   ],
   imports: [
     CommonModule,
