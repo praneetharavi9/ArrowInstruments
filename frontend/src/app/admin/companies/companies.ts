@@ -12,6 +12,8 @@ interface EmailRow {
   isPrimary: boolean;
 }
 
+type CompanySortColumn = 'companyId' | 'companyName' | 'phone' | 'email' | 'gstNumber' | 'city';
+
 @Component({
   selector: 'app-companies',
   standalone: false,
@@ -21,6 +23,8 @@ interface EmailRow {
 export class Companies implements OnInit {
   companies: AdminCompany[] = [];
   loading = true;
+  sortColumn: CompanySortColumn = 'companyName';
+  sortDirection: 'asc' | 'desc' = 'asc';
 
   // Modal state
   showModal = false;
@@ -59,12 +63,45 @@ export class Companies implements OnInit {
     this.companyService.getAll().subscribe({
       next: (companies) => {
         this.companies = companies;
+        this.applySort();
         this.loading = false;
       },
       error: () => {
         this.loading = false;
         this.toastService.show('Failed to load companies.', 'danger');
       }
+    });
+  }
+
+  sortBy(column: CompanySortColumn): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applySort();
+  }
+
+  private applySort(): void {
+    const dir = this.sortDirection === 'asc' ? 1 : -1;
+    const valueOf = (c: AdminCompany): string | number => {
+      switch (this.sortColumn) {
+        case 'companyId': return c.companyId;
+        case 'companyName': return c.companyName.toLowerCase();
+        case 'phone': return this.primaryPhone(c).toLowerCase();
+        case 'email': return this.primaryEmail(c).toLowerCase();
+        case 'gstNumber': return (c.gstNumber || '').toLowerCase();
+        case 'city': return (c.city || '').toLowerCase();
+      }
+    };
+
+    this.companies = [...this.companies].sort((a, b) => {
+      const valA = valueOf(a);
+      const valB = valueOf(b);
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
     });
   }
 

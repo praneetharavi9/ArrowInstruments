@@ -1,12 +1,19 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Backend.Data;
 using Backend.Models;
 using Backend.Repository;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
+// QuestPDF (ledger statement PDFs) — Community license is free for
+// organizations with < $1M annual revenue, which covers this app.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +42,9 @@ builder.Services.Configure<FtpSettings>(
 // ── Reminders (email reminders + recurring schedules) ──────────────────────────
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddHostedService<ReminderSchedulerService>();
+
+// ── Ledger statement export (Excel/PDF) ─────────────────────────────────────────
+builder.Services.AddScoped<LedgerDocumentService>();
 
 // ── JWT settings ──────────────────────────────────────────────────────────────
 // Override with JWT_SECRET environment variable in production.
@@ -105,6 +115,35 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// Per-client-IP limits on the two endpoints anyone on the internet can hit
+// without auth: admin login (brute-force protection) and the public contact
+// form (stops it being scripted into a spam/email relay).
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("contact", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0
+            }));
+});
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
@@ -126,11 +165,48 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 // ═════════════════════════════════════════════════════════════════════════════
 
-// Swagger enabled in all environments temporarily so endpoints can be tested
-// on Railway. Remove the unconditional block and restore IsDevelopment() guard
-// once the production Angular frontend is confirmed working.
-app.UseSwagger();
-app.UseSwaggerUI();
+// Railway terminates TLS at its edge and proxies plain HTTP to the container,
+// so the real client IP arrives via X-Forwarded-For — needed for the rate
+// limiter below to key on the actual caller instead of Railway's proxy IP.
+// KnownNetworks/KnownProxies are cleared because Railway's edge IP isn't a
+// fixed, pinnable address; this is the standard pattern for platforms like
+// Railway/Heroku that sit in front of the app as a trusted edge proxy.
+var forwardedHeaderOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeaderOptions.KnownNetworks.Clear();
+forwardedHeaderOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeaderOptions);
+
+// Swagger only outside Production — the production frontend is confirmed
+// working, so there's no more need to expose the full API schema publicly.
+if (!app.Environment.IsProduction())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+if (app.Environment.IsProduction())
+{
+    app.UseHsts();
+}
+
+// Baseline security response headers on every response. CSP is production-only
+// since it would otherwise block Swagger UI's own inline scripts/styles in
+// Development — this API returns JSON everywhere else, so 'none' is safe.
+var isProductionEnv = app.Environment.IsProduction();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    if (isProductionEnv)
+    {
+        context.Response.Headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'";
+    }
+    await next();
+});
 
 // NOTE: UseHttpsRedirection is intentionally removed.
 // Railway (and most reverse-proxy hosts) terminate TLS externally.
@@ -143,6 +219,8 @@ app.UseRouting();
 // CORS must come after routing but before authentication/authorization so that
 // OPTIONS preflight requests are answered before hitting any auth check.
 app.UseCors("AllowAngularApp");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

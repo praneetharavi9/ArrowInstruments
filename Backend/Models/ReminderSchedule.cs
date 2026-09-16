@@ -14,7 +14,7 @@ namespace Backend.Models
         [Column("company_id")]
         public int CompanyId { get; set; }
 
-        // "weekly" | "monthly" | "yearly"
+        // "daily" | "weekly" | "monthly" | "yearly"
         [Required]
         [Column("frequency")]
         [MaxLength(20)]
@@ -25,6 +25,15 @@ namespace Backend.Models
 
         [Column("end_date")]
         public DateTime? EndDate { get; set; }
+
+        // Time of day (wall-clock, as entered by the admin) the reminder should go out at.
+        [Column("send_time")]
+        public TimeSpan SendTime { get; set; } = new TimeSpan(9, 0, 0);
+
+        // When true, a fresh ledger statement PDF (opening balance through the
+        // send date) is generated and attached each time this schedule fires.
+        [Column("attach_ledger_statement")]
+        public bool AttachLedgerStatement { get; set; }
 
         // JSON array of recipient email strings, e.g. ["a@x.com","b@y.com"]
         [Required]

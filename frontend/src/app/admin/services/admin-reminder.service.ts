@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export type ReminderFrequency = 'weekly' | 'monthly' | 'yearly';
+export type ReminderFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface ReminderScheduleAttachment {
   id: number;
@@ -16,6 +16,8 @@ export interface ReminderSchedule {
   frequency: ReminderFrequency;
   startDate: string;
   endDate: string | null;
+  sendTime: string;
+  attachLedgerStatement: boolean;
   to: string[];
   cc: string[];
   subject: string;
@@ -33,12 +35,16 @@ export interface SendReminderPayload {
   subject: string;
   body: string;
   files: File[];
+  attachLedgerStatement: boolean;
+  ledgerStartDate?: string;
+  ledgerEndDate?: string;
 }
 
 export interface ScheduleReminderPayload extends SendReminderPayload {
   frequency: ReminderFrequency;
   startDate: string;
   endDate?: string | null;
+  sendTime: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -61,6 +67,8 @@ export class AdminReminderService {
     if (payload.endDate) {
       form.set('endDate', payload.endDate);
     }
+    form.set('sendTime', payload.sendTime);
+    form.set('attachLedgerStatement', String(payload.attachLedgerStatement));
     return this.http.post<{ success: boolean; message: string; scheduleId: number }>(
       `${this.apiUrl}/customers/${companyId}/schedules`, form
     );
@@ -84,6 +92,9 @@ export class AdminReminderService {
     form.set('cc', payload.cc.join(','));
     form.set('subject', payload.subject);
     form.set('body', payload.body);
+    form.set('attachLedgerStatement', String(payload.attachLedgerStatement));
+    if (payload.ledgerStartDate) form.set('ledgerStartDate', payload.ledgerStartDate);
+    if (payload.ledgerEndDate) form.set('ledgerEndDate', payload.ledgerEndDate);
     for (const file of payload.files) {
       form.append('files', file, file.name);
     }

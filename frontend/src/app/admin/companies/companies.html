@@ -26,12 +26,30 @@
   <table class="table admin-table">
     <thead>
       <tr>
-        <th>Company ID</th>
-        <th>Company Name</th>
-        <th>Primary Phone</th>
-        <th>Primary Email</th>
-        <th>GST Number</th>
-        <th>City</th>
+        <th class="sortable" (click)="sortBy('companyId')">
+          Company ID
+          <i class="fa-solid" [class.fa-sort]="sortColumn !== 'companyId'" [class.fa-sort-up]="sortColumn === 'companyId' && sortDirection === 'asc'" [class.fa-sort-down]="sortColumn === 'companyId' && sortDirection === 'desc'"></i>
+        </th>
+        <th class="sortable" (click)="sortBy('companyName')">
+          Company Name
+          <i class="fa-solid" [class.fa-sort]="sortColumn !== 'companyName'" [class.fa-sort-up]="sortColumn === 'companyName' && sortDirection === 'asc'" [class.fa-sort-down]="sortColumn === 'companyName' && sortDirection === 'desc'"></i>
+        </th>
+        <th class="sortable" (click)="sortBy('phone')">
+          Primary Phone
+          <i class="fa-solid" [class.fa-sort]="sortColumn !== 'phone'" [class.fa-sort-up]="sortColumn === 'phone' && sortDirection === 'asc'" [class.fa-sort-down]="sortColumn === 'phone' && sortDirection === 'desc'"></i>
+        </th>
+        <th class="sortable" (click)="sortBy('email')">
+          Primary Email
+          <i class="fa-solid" [class.fa-sort]="sortColumn !== 'email'" [class.fa-sort-up]="sortColumn === 'email' && sortDirection === 'asc'" [class.fa-sort-down]="sortColumn === 'email' && sortDirection === 'desc'"></i>
+        </th>
+        <th class="sortable" (click)="sortBy('gstNumber')">
+          GST Number
+          <i class="fa-solid" [class.fa-sort]="sortColumn !== 'gstNumber'" [class.fa-sort-up]="sortColumn === 'gstNumber' && sortDirection === 'asc'" [class.fa-sort-down]="sortColumn === 'gstNumber' && sortDirection === 'desc'"></i>
+        </th>
+        <th class="sortable" (click)="sortBy('city')">
+          City
+          <i class="fa-solid" [class.fa-sort]="sortColumn !== 'city'" [class.fa-sort-up]="sortColumn === 'city' && sortDirection === 'asc'" [class.fa-sort-down]="sortColumn === 'city' && sortDirection === 'desc'"></i>
+        </th>
         <th>Actions</th>
       </tr>
     </thead>

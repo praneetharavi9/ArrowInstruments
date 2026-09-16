@@ -1,7 +1,9 @@
-﻿using Backend.Data;
+﻿using System.Net;
+using Backend.Data;
 using Backend.Models;
 using MailKit.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MailKit.Net.Smtp;
@@ -23,6 +25,7 @@ namespace Backend.Controllers
 
         // POST: api/contact
         [HttpPost]
+        [EnableRateLimiting("contact")]
         public async Task<IActionResult> SubmitContact([FromBody] ContactSubmission submission)
         {
             if (!ModelState.IsValid)
@@ -48,6 +51,16 @@ namespace Backend.Controllers
 
             private async Task SendEmailNotification(ContactSubmission submission)
         {
+            // The submitter controls every one of these fields — HTML-encode
+            // before interpolating into the email bodies below, otherwise a
+            // submission can inject markup/links into mail sent from our own
+            // domain (phishing-style content injection).
+            var safeName = WebUtility.HtmlEncode(submission.Name);
+            var safeCompany = WebUtility.HtmlEncode(submission.CompanyName) ?? "—";
+            var safeEmail = WebUtility.HtmlEncode(submission.Email);
+            var safePhone = WebUtility.HtmlEncode(submission.Phone) ?? "—";
+            var safeMessage = WebUtility.HtmlEncode(submission.Message) ?? "—";
+
             // --- Notification to Arrow Instruments ---
             var notification = new MimeMessage();
             notification.From.Add(new MailboxAddress(_emailSettings.FromName, _emailSettings.FromEmail));
@@ -59,11 +72,11 @@ namespace Backend.Controllers
             <html><body style='font-family:Arial,sans-serif;color:#333'>
             <h2 style='color:#770202'>New Enquiry — Arrow Instruments</h2>
             <table style='border-collapse:collapse;width:100%;max-width:600px'>
-                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold;width:30%'>Name</td><td style='padding:8px;border:1px solid #ddd'>{submission.Name}</td></tr>
-                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Company</td><td style='padding:8px;border:1px solid #ddd'>{submission.CompanyName ?? "—"}</td></tr>
-                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Email</td><td style='padding:8px;border:1px solid #ddd'>{submission.Email}</td></tr>
-                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Phone</td><td style='padding:8px;border:1px solid #ddd'>{submission.Phone ?? "—"}</td></tr>
-                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Message</td><td style='padding:8px;border:1px solid #ddd'>{submission.Message ?? "—"}</td></tr>
+                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold;width:30%'>Name</td><td style='padding:8px;border:1px solid #ddd'>{safeName}</td></tr>
+                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Company</td><td style='padding:8px;border:1px solid #ddd'>{safeCompany}</td></tr>
+                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Email</td><td style='padding:8px;border:1px solid #ddd'>{safeEmail}</td></tr>
+                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Phone</td><td style='padding:8px;border:1px solid #ddd'>{safePhone}</td></tr>
+                <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Message</td><td style='padding:8px;border:1px solid #ddd'>{safeMessage}</td></tr>
                 <tr><td style='padding:8px;border:1px solid #ddd;background:#f9f9f9;font-weight:bold'>Submitted At</td><td style='padding:8px;border:1px solid #ddd'>{submission.SubmittedAt:dd MMM yyyy, hh:mm tt} UTC</td></tr>
             </table>
             </body></html>"
@@ -79,7 +92,7 @@ namespace Backend.Controllers
                 Text = $@"
             <html><body style='font-family:Arial,sans-serif;color:#333'>
             <h2 style='color:#770202'>Thank you for your enquiry!</h2>
-            <p>Dear {submission.Name},</p>
+            <p>Dear {safeName},</p>
             <p>We have received your enquiry and will get back to you within <strong>24 hours</strong>.</p>
             <br/>
             <p>Best regards,<br/>

@@ -32,6 +32,10 @@
     <button class="btn btn-add" (click)="openAddEntry()">
       <i class="fa-solid fa-plus me-2"></i>Add Entry
     </button>
+    <button class="btn btn-schedule" (click)="downloadExcel()" [disabled]="downloadingExcel">
+      <span *ngIf="downloadingExcel" class="spinner-border spinner-border-sm me-2"></span>
+      <i class="fa-solid fa-file-excel me-2" *ngIf="!downloadingExcel"></i>{{ downloadingExcel ? 'Downloading...' : 'Download Ledger' }}
+    </button>
   </div>
 
   <!-- Table -->
@@ -39,10 +43,13 @@
     <table class="table admin-table">
       <thead>
         <tr>
-          <th>Date</th>
+          <th class="sortable" (click)="toggleDateSort()">
+            Date
+            <i class="fa-solid" [class.fa-sort-up]="dateSortDirection === 'asc'" [class.fa-sort-down]="dateSortDirection === 'desc'"></i>
+          </th>
+          <th>Particulars</th>
           <th>Type</th>
           <th>Trans No.</th>
-          <th>Particulars</th>
           <th class="text-end">Debit (₹)</th>
           <th class="text-end">Credit (₹)</th>
           <th class="text-end">Balance (₹)</th>
@@ -52,9 +59,9 @@
       <tbody>
         <tr class="opening-row">
           <td>—</td>
+          <td class="fw-semibold">Opening Balance</td>
           <td>Op.Bal</td>
           <td>—</td>
-          <td class="fw-semibold">Opening Balance</td>
           <td class="text-end">—</td>
           <td class="text-end">—</td>
           <td class="text-end fw-semibold">{{ openingBalance | number:'1.2-2' }}</td>
@@ -68,9 +75,9 @@
         </tr>
         <tr *ngFor="let row of rows">
           <td>{{ row.date | date:'dd MMM yyyy' }}</td>
+          <td class="text-muted">{{ row.description || '—' }}</td>
           <td>{{ row.type || '—' }}</td>
           <td>{{ row.transNo || '—' }}</td>
-          <td class="text-muted">{{ row.description || '—' }}</td>
           <td class="text-end">{{ row.debit | number:'1.2-2' }}</td>
           <td class="text-end">{{ row.credit | number:'1.2-2' }}</td>
           <td class="text-end fw-semibold">{{ row.balance | number:'1.2-2' }}</td>
@@ -90,9 +97,9 @@
         </tr>
         <tr class="total-row">
           <td>—</td>
-          <td>—</td>
-          <td>—</td>
           <td class="fw-semibold">Current Total</td>
+          <td>—</td>
+          <td>—</td>
           <td class="text-end fw-semibold">{{ totalDebit | number:'1.2-2' }}</td>
           <td class="text-end fw-semibold">{{ totalCredit | number:'1.2-2' }}</td>
           <td class="text-end">—</td>
@@ -100,9 +107,9 @@
         </tr>
         <tr class="closing-row">
           <td>—</td>
-          <td>—</td>
-          <td>—</td>
           <td class="fw-semibold">Credit Balance</td>
+          <td>—</td>
+          <td>—</td>
           <td class="text-end">—</td>
           <td class="text-end">—</td>
           <td class="text-end fw-semibold">{{ closingBalance | number:'1.2-2' }}</td>
@@ -133,14 +140,34 @@
         </div>
 
         <div class="mb-3" *ngIf="formType !== 'opening'">
-          <label class="form-label">Particulars <span class="text-muted">(optional)</span></label>
-          <input type="text" class="form-control" [(ngModel)]="formDescription" placeholder="e.g. Invoice #1023" maxlength="255">
+          <label class="form-label required-label">Particulars</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="particularsChoice" id="particularsTo" value="to" [(ngModel)]="formParticularsChoice" (ngModelChange)="onParticularsChoiceChange('to')">
+              <label class="form-check-label" for="particularsTo">To</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="particularsChoice" id="particularsBy" value="by" [(ngModel)]="formParticularsChoice" (ngModelChange)="onParticularsChoiceChange('by')">
+              <label class="form-check-label" for="particularsBy">By</label>
+            </div>
+          </div>
         </div>
 
         <div class="row" *ngIf="formType !== 'opening'">
           <div class="mb-3 col-6">
-            <label class="form-label">Type <span class="text-muted">(optional)</span></label>
-            <input type="text" class="form-control" [(ngModel)]="formVoucherType" placeholder="e.g. Rcpt, Pymt, Cash" maxlength="50">
+            <label class="form-label required-label">Type</label>
+            <div *ngIf="formParticularsChoice === 'to'" class="form-control-plaintext fw-semibold">Sales</div>
+            <div class="d-flex gap-3" *ngIf="formParticularsChoice === 'by'">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="byType" id="byBank" value="bank" [(ngModel)]="formByType" (ngModelChange)="onByTypeChange('bank')">
+                <label class="form-check-label" for="byBank">Bank</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="byType" id="byCash" value="cash" [(ngModel)]="formByType" (ngModelChange)="onByTypeChange('cash')">
+                <label class="form-check-label" for="byCash">Cash</label>
+              </div>
+            </div>
+            <div *ngIf="!formParticularsChoice" class="text-muted small">Select To or By above.</div>
           </div>
           <div class="mb-3 col-6">
             <label class="form-label">Trans No. <span class="text-muted">(optional)</span></label>
@@ -273,6 +300,11 @@
             </li>
           </ul>
         </div>
+
+        <div class="mb-3 form-check">
+          <input class="form-check-input" type="checkbox" id="sendAttachLedger" [(ngModel)]="sendAttachLedger">
+          <label class="form-check-label" for="sendAttachLedger">Attach ledger statement (PDF)</label>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeSendModal()">Cancel</button>
@@ -298,21 +330,26 @@
         <div *ngIf="scheduleError" class="alert alert-danger py-2">{{ scheduleError }}</div>
 
         <div class="row">
-          <div class="mb-3 col-md-4">
+          <div class="mb-3 col-md-3">
             <label class="form-label required-label">Frequency</label>
             <select class="form-select" [(ngModel)]="scheduleFrequency">
+              <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
             </select>
           </div>
-          <div class="mb-3 col-md-4">
+          <div class="mb-3 col-md-3">
             <label class="form-label required-label">Start Date</label>
             <input type="date" class="form-control" [(ngModel)]="scheduleStartDate">
           </div>
-          <div class="mb-3 col-md-4">
+          <div class="mb-3 col-md-3">
             <label class="form-label">End Date <span class="text-muted">(optional)</span></label>
             <input type="date" class="form-control" [(ngModel)]="scheduleEndDate">
+          </div>
+          <div class="mb-3 col-md-3">
+            <label class="form-label required-label">Send Time</label>
+            <input type="time" class="form-control" [(ngModel)]="scheduleSendTime">
           </div>
         </div>
 
@@ -368,6 +405,11 @@
           </ul>
         </div>
 
+        <div class="mb-3 form-check">
+          <input class="form-check-input" type="checkbox" id="scheduleAttachLedger" [(ngModel)]="scheduleAttachLedger">
+          <label class="form-check-label" for="scheduleAttachLedger">Attach ledger statement (PDF) — a fresh copy is generated each time this reminder sends</label>
+        </div>
+
         <div class="text-end mb-4">
           <button class="btn btn-save" (click)="submitCreateSchedule()" [disabled]="scheduleLoading">
             <span *ngIf="scheduleLoading" class="spinner-border spinner-border-sm me-2"></span>
@@ -392,7 +434,9 @@
               </span>
               <span class="text-muted small d-block">
                 Starts {{ s.startDate | date:'dd MMM yyyy' }}<span *ngIf="s.endDate"> · Ends {{ s.endDate | date:'dd MMM yyyy' }}</span>
-                · Next run {{ s.nextRunAt | date:'dd MMM yyyy' }}
+                · Sends at {{ s.sendTime }}
+                · Next run {{ s.nextRunAt | date:'dd MMM yyyy, h:mm a' }}
+                <span *ngIf="s.attachLedgerStatement"> · Attaches ledger PDF</span>
                 <span *ngIf="!s.isActive"> · Paused</span>
               </span>
             </div>
@@ -409,6 +453,31 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeScheduleModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Zero Balance Confirm Modal (shared by Send Email Reminder + Schedule Reminders; kept last in the DOM so it always stacks above whichever modal triggered it) -->
+<div class="modal-backdrop-overlay" *ngIf="showZeroBalanceConfirm" (click)="cancelZeroBalanceConfirm()"></div>
+<div class="modal show" tabindex="-1" style="display:block" *ngIf="showZeroBalanceConfirm">
+  <div class="modal-dialog modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>Outstanding Balance is Zero
+        </h5>
+      </div>
+      <div class="modal-body">
+        <p *ngIf="showScheduleModal">This customer's outstanding balance is ₹0.00. Are you sure you want to schedule recurring payment reminders anyway?</p>
+        <p *ngIf="!showScheduleModal">This customer's outstanding balance is ₹0.00. Are you sure you want to send a payment reminder anyway?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelZeroBalanceConfirm()">Cancel</button>
+        <button class="btn btn-save" (click)="confirmZeroBalanceAction()" [disabled]="sendLoading || scheduleLoading">
+          <span *ngIf="sendLoading || scheduleLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ (sendLoading || scheduleLoading) ? 'Sending...' : (showScheduleModal ? 'Schedule Anyway' : 'Send Anyway') }}
+        </button>
       </div>
     </div>
   </div>

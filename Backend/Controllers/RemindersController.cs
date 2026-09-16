@@ -15,11 +15,13 @@ namespace Backend.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ReminderService _reminderService;
+        private readonly LedgerDocumentService _documentService;
 
-        public RemindersController(AppDbContext context, ReminderService reminderService)
+        public RemindersController(AppDbContext context, ReminderService reminderService, LedgerDocumentService documentService)
         {
             _context = context;
             _reminderService = reminderService;
+            _documentService = documentService;
         }
 
         // POST: api/reminders/customers/5/send  (multipart/form-data — one-off email)
@@ -57,6 +59,19 @@ namespace Backend.Controllers
                 }
             }
 
+            if (form.AttachLedgerStatement)
+            {
+                var ledgerStart = form.LedgerStartDate?.Date ?? new DateTime(company.DateCreated.Year, 1, 1);
+                var ledgerEnd = form.LedgerEndDate?.Date ?? DateTime.UtcNow.Date;
+                var statement = await _documentService.BuildStatementDataAsync(companyId, ledgerStart, ledgerEnd);
+                attachments.Add(new ReminderAttachmentData
+                {
+                    FileName = $"{company.CompanyName} Ledger Statement.pdf",
+                    ContentType = "application/pdf",
+                    Bytes = _documentService.BuildPdf(statement)
+                });
+            }
+
             try
             {
                 await _reminderService.SendAsync(to, cc, form.Subject.Trim(), form.Body ?? string.Empty, attachments);
@@ -87,8 +102,8 @@ namespace Backend.Controllers
                 return BadRequest(new { success = false, message = recipientError });
 
             var frequency = form.Frequency?.Trim().ToLowerInvariant();
-            if (frequency != "weekly" && frequency != "monthly" && frequency != "yearly")
-                return BadRequest(new { success = false, message = "Frequency must be weekly, monthly, or yearly." });
+            if (frequency != "daily" && frequency != "weekly" && frequency != "monthly" && frequency != "yearly")
+                return BadRequest(new { success = false, message = "Frequency must be daily, weekly, monthly, or yearly." });
 
             if (form.StartDate == default)
                 return BadRequest(new { success = false, message = "Start date is required." });
@@ -96,11 +111,34 @@ namespace Backend.Controllers
             if (form.EndDate != null && form.EndDate.Value.Date < form.StartDate.Date)
                 return BadRequest(new { success = false, message = "End date cannot be before the start date." });
 
+            var sendTimeRaw = form.SendTime?.Trim();
+            TimeSpan sendTime;
+            if (string.IsNullOrWhiteSpace(sendTimeRaw))
+            {
+                sendTime = new TimeSpan(9, 0, 0);
+            }
+            else if (!TimeSpan.TryParseExact(sendTimeRaw, new[] { "hh\\:mm", "h\\:mm" }, System.Globalization.CultureInfo.InvariantCulture, out sendTime))
+            {
+                return BadRequest(new { success = false, message = "Send time must be in HH:mm format." });
+            }
+
             if (string.IsNullOrWhiteSpace(form.Subject))
                 return BadRequest(new { success = false, message = "Subject is required." });
 
             if (string.IsNullOrWhiteSpace(form.Body))
                 return BadRequest(new { success = false, message = "Body is required." });
+
+            // NextRunAt/SendTime are naive IST wall-clock values (see IndiaTime),
+            // so if the admin's picked date+time has already passed by the time
+            // this request lands (e.g. it was 7:50 PM they meant for later today,
+            // but it's already past that), roll forward to the next real
+            // occurrence instead of firing on the very next scheduler poll.
+            var nowIst = IndiaTime.NowAsIst;
+            var nextRunAt = form.StartDate.Date.Add(sendTime);
+            while (nextRunAt <= nowIst)
+            {
+                nextRunAt = ReminderSchedulerService.ComputeNextRun(nextRunAt, frequency);
+            }
 
             var schedule = new ReminderSchedule
             {
@@ -108,12 +146,14 @@ namespace Backend.Controllers
                 Frequency = frequency,
                 StartDate = form.StartDate.Date,
                 EndDate = form.EndDate?.Date,
+                SendTime = sendTime,
+                AttachLedgerStatement = form.AttachLedgerStatement,
                 ToEmails = JsonSerializer.Serialize(to),
                 CcEmails = cc.Count > 0 ? JsonSerializer.Serialize(cc) : null,
                 Subject = form.Subject.Trim(),
                 Body = form.Body,
                 IsActive = true,
-                NextRunAt = form.StartDate.Date,
+                NextRunAt = nextRunAt,
                 DateCreated = DateTime.UtcNow
             };
 
@@ -170,6 +210,8 @@ namespace Backend.Controllers
                 r.Frequency,
                 startDate = r.StartDate,
                 endDate = r.EndDate,
+                sendTime = r.SendTime.ToString(@"hh\:mm"),
+                r.AttachLedgerStatement,
                 to = ParseJsonList(r.ToEmails),
                 cc = ParseJsonList(r.CcEmails),
                 r.Subject,
@@ -296,6 +338,9 @@ namespace Backend.Controllers
         public string Subject { get; set; } = string.Empty;
         public string? Body { get; set; }
         public List<IFormFile>? Files { get; set; }
+        public bool AttachLedgerStatement { get; set; }
+        public DateTime? LedgerStartDate { get; set; }
+        public DateTime? LedgerEndDate { get; set; }
     }
 
     public class ScheduleReminderForm
@@ -303,6 +348,8 @@ namespace Backend.Controllers
         public string Frequency { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public string? SendTime { get; set; }              // "HH:mm", defaults to 09:00
+        public bool AttachLedgerStatement { get; set; }     // attach a fresh ledger PDF each send
         public string To { get; set; } = string.Empty;    // comma-separated
         public string? Cc { get; set; }                    // comma-separated
         public string Subject { get; set; } = string.Empty;

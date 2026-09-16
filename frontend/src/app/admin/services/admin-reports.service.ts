@@ -89,4 +89,9 @@ export class AdminReportsService {
   setOpeningBalance(companyId: number, amount: number): Observable<OpeningBalanceResponse> {
     return this.http.put<OpeningBalanceResponse>(`${this.apiUrl}/customers/${companyId}/opening-balance`, { amount });
   }
+
+  downloadLedgerExcel(companyId: number, startDate: string, endDate: string): Observable<Blob> {
+    const params = new HttpParams().set('startDate', startDate).set('endDate', endDate);
+    return this.http.get(`${this.apiUrl}/customers/${companyId}/ledger/excel`, { params, responseType: 'blob' });
+  }
 }

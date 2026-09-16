@@ -1,5 +1,6 @@
 using Backend.Data;
 using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,12 @@ namespace Backend.Controllers
     public class ReportsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly LedgerDocumentService _documentService;
 
-        public ReportsController(AppDbContext context)
+        public ReportsController(AppDbContext context, LedgerDocumentService documentService)
         {
             _context = context;
+            _documentService = documentService;
         }
 
         // GET: api/reports/customers?startDate=2026-01-01&endDate=2026-09-13
@@ -105,6 +108,48 @@ namespace Backend.Controllers
                 closingBalance = running,
                 rows
             });
+        }
+
+        // GET: api/reports/customers/5/ledger/excel?startDate=2026-01-01&endDate=2026-09-13
+        [HttpGet("customers/{companyId}/ledger/excel")]
+        public async Task<IActionResult> ExportLedgerExcel(int companyId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var (start, end) = ResolveRange(startDate, endDate);
+
+            LedgerStatementData data;
+            try
+            {
+                data = await _documentService.BuildStatementDataAsync(companyId, start, end);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+
+            var bytes = _documentService.BuildExcel(data);
+            var fileName = $"{data.CustomerName} Ledger Statement {start:yyyyMMdd}-{end:yyyyMMdd}.xlsx";
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+
+        // GET: api/reports/customers/5/ledger/pdf?startDate=2026-01-01&endDate=2026-09-13
+        [HttpGet("customers/{companyId}/ledger/pdf")]
+        public async Task<IActionResult> ExportLedgerPdf(int companyId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var (start, end) = ResolveRange(startDate, endDate);
+
+            LedgerStatementData data;
+            try
+            {
+                data = await _documentService.BuildStatementDataAsync(companyId, start, end);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+
+            var bytes = _documentService.BuildPdf(data);
+            var fileName = $"{data.CustomerName} Ledger Statement {start:yyyyMMdd}-{end:yyyyMMdd}.pdf";
+            return File(bytes, "application/pdf", fileName);
         }
 
         // POST: api/reports/customers/5/entries

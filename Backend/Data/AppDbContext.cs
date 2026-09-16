@@ -22,6 +22,7 @@ namespace Backend.Data
         public DbSet<LedgerEntry> LedgerEntries { get; set; }
         public DbSet<ReminderSchedule> ReminderSchedules { get; set; }
         public DbSet<ReminderAttachment> ReminderAttachments { get; set; }
+        public DbSet<BusinessProfile> BusinessProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

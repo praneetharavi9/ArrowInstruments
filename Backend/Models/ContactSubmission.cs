@@ -20,6 +20,7 @@ namespace Backend.Models
         public string? CompanyName { get; set; }
 
         [Required]
+        [EmailAddress]
         [Column("email")]
         [MaxLength(150)]
         public string Email { get; set; } = string.Empty;

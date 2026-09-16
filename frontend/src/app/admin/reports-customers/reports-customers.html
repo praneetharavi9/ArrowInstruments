@@ -33,7 +33,10 @@
   <table class="table admin-table">
     <thead>
       <tr>
-        <th>Account Name</th>
+        <th class="sortable" (click)="toggleNameSort()">
+          Account Name
+          <i class="fa-solid" [class.fa-sort-up]="nameSortDirection === 'asc'" [class.fa-sort-down]="nameSortDirection === 'desc'"></i>
+        </th>
         <th class="text-end">Open (₹)</th>
         <th class="text-end">Debit (₹)</th>
         <th class="text-end">Credit (₹)</th>

@@ -5,6 +5,7 @@ using Backend.Data;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -26,25 +27,32 @@ namespace Backend.Controllers
 
         // POST /api/auth/admin/login
         [HttpPost("admin/login")]
+        [EnableRateLimiting("login")]
         public async Task<IActionResult> AdminLogin([FromBody] LoginRequest request)
         {
+            // Every rejection below returns the same generic message/status —
+            // revealing *why* a login failed (unknown email vs. wrong role vs.
+            // deactivated vs. wrong password) lets an attacker enumerate which
+            // email addresses have accounts.
+            var invalidCredentials = Unauthorized(new { success = false, message = "Invalid email or password." });
+
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-                return BadRequest(new { success = false, message = "Email and password are required." });
+                return invalidCredentials;
 
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email.Trim().ToLower());
 
             if (user == null)
-                return NotFound(new { success = false, message = "No account found with that email address." });
+                return invalidCredentials;
 
             if (user.Role != "admin")
-                return StatusCode(403, new { success = false, message = "Access denied. Admin accounts only." });
+                return invalidCredentials;
 
             if (!user.IsActive)
-                return StatusCode(403, new { success = false, message = "This account has been deactivated." });
+                return invalidCredentials;
 
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                return Unauthorized(new { success = false, message = "Incorrect password." });
+                return invalidCredentials;
 
             user.LastLogin = DateTime.UtcNow;
             await _context.SaveChangesAsync();

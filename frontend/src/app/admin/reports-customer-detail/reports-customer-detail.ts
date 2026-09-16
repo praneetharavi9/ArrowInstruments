@@ -22,6 +22,8 @@ export class ReportsCustomerDetailComponent implements OnInit {
   loading = true;
   startDate = '';
   endDate = '';
+  dateSortDirection: 'asc' | 'desc' = 'asc';
+  downloadingExcel = false;
 
   // Entry modal
   showEntryModal = false;
@@ -29,6 +31,8 @@ export class ReportsCustomerDetailComponent implements OnInit {
   editingEntryId: number | null = null;
   formDate = '';
   formDescription = '';
+  formParticularsChoice: 'to' | 'by' | null = null;
+  formByType: 'bank' | 'cash' | null = null;
   formVoucherType = '';
   formTransNo = '';
   formType: 'debit' | 'credit' | 'opening' = 'debit';
@@ -54,14 +58,20 @@ export class ReportsCustomerDetailComponent implements OnInit {
   sendSubject = '';
   sendBody = '';
   sendFiles: File[] = [];
+  sendAttachLedger = false;
   sendLoading = false;
   sendError = '';
+
+  // Zero-balance confirm (guards both the Send Email Reminder and Schedule Reminders modals)
+  showZeroBalanceConfirm = false;
+  private zeroBalancePendingAction: 'send' | 'schedule' | null = null;
 
   // Schedule Reminders modal
   showScheduleModal = false;
   scheduleFrequency: ReminderFrequency = 'monthly';
   scheduleStartDate = '';
   scheduleEndDate = '';
+  scheduleSendTime = '09:00';
   scheduleTo: string[] = [];
   scheduleCc: string[] = [];
   scheduleToInput = '';
@@ -69,6 +79,7 @@ export class ReportsCustomerDetailComponent implements OnInit {
   scheduleSubject = '';
   scheduleBody = '';
   scheduleFiles: File[] = [];
+  scheduleAttachLedger = false;
   scheduleLoading = false;
   scheduleError = '';
   schedules: ReminderSchedule[] = [];
@@ -121,6 +132,7 @@ export class ReportsCustomerDetailComponent implements OnInit {
         this.rows = res.rows;
         this.totalDebit = this.rows.reduce((sum, r) => sum + (r.debit || 0), 0);
         this.totalCredit = this.rows.reduce((sum, r) => sum + (r.credit || 0), 0);
+        this.sortRowsByDate();
         this.loading = false;
       },
       error: () => {
@@ -136,8 +148,37 @@ export class ReportsCustomerDetailComponent implements OnInit {
     this.loadData();
   }
 
+  toggleDateSort(): void {
+    this.dateSortDirection = this.dateSortDirection === 'asc' ? 'desc' : 'asc';
+    this.sortRowsByDate();
+  }
+
+  private sortRowsByDate(): void {
+    const dir = this.dateSortDirection === 'asc' ? 1 : -1;
+    this.rows = [...this.rows].sort((a, b) => (new Date(a.date).getTime() - new Date(b.date).getTime()) * dir);
+  }
+
   backToList(): void {
     this.router.navigate(['/admin/reports/customers']);
+  }
+
+  downloadExcel(): void {
+    this.downloadingExcel = true;
+    this.reportsService.downloadLedgerExcel(this.companyId, this.startDate, this.endDate).subscribe({
+      next: (blob) => {
+        this.downloadingExcel = false;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${this.companyName} Ledger Statement ${this.startDate}-${this.endDate}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.downloadingExcel = false;
+        this.toastService.show('Failed to download ledger.', 'danger');
+      }
+    });
   }
 
   openAddEntry(): void {
@@ -145,6 +186,8 @@ export class ReportsCustomerDetailComponent implements OnInit {
     this.editingEntryId = null;
     this.formDate = this.toDateString(new Date());
     this.formDescription = '';
+    this.formParticularsChoice = null;
+    this.formByType = null;
     this.formVoucherType = '';
     this.formTransNo = '';
     this.formType = 'debit';
@@ -165,7 +208,42 @@ export class ReportsCustomerDetailComponent implements OnInit {
     this.formAmount = row.debit > 0 ? row.debit : row.credit;
     this.formError = '';
     this.openingBalanceOnly = false;
+
+    const desc = this.formDescription.trim().toLowerCase();
+    const voucherType = this.formVoucherType.trim().toLowerCase();
+    if (desc === 'to') {
+      this.formParticularsChoice = 'to';
+      this.formByType = null;
+    } else if (desc === 'by') {
+      this.formParticularsChoice = 'by';
+      this.formByType = voucherType === 'bank' ? 'bank' : voucherType === 'cash' ? 'cash' : null;
+    } else {
+      // Existing entry doesn't match one of the To/By options — leave unselected
+      // so the admin has to pick one before saving over it.
+      this.formParticularsChoice = null;
+      this.formByType = null;
+    }
+
     this.showEntryModal = true;
+  }
+
+  onParticularsChoiceChange(choice: 'to' | 'by'): void {
+    this.formParticularsChoice = choice;
+    this.formDescription = choice === 'to' ? 'To' : 'By';
+    if (choice === 'to') {
+      this.formType = 'debit';
+      this.formVoucherType = 'Sales';
+      this.formByType = null;
+    } else {
+      this.formType = 'credit';
+      this.formByType = null;
+      this.formVoucherType = '';
+    }
+  }
+
+  onByTypeChange(byType: 'bank' | 'cash'): void {
+    this.formByType = byType;
+    this.formVoucherType = byType === 'bank' ? 'Bank' : 'Cash';
   }
 
   openEditOpeningBalance(): void {
@@ -215,6 +293,14 @@ export class ReportsCustomerDetailComponent implements OnInit {
 
     if (!this.formDate) {
       this.formError = 'Date is required.';
+      return;
+    }
+    if (!this.formParticularsChoice) {
+      this.formError = 'Select To or By for Particulars.';
+      return;
+    }
+    if (this.formParticularsChoice === 'by' && !this.formByType) {
+      this.formError = 'Select Bank or Cash for Type.';
       return;
     }
     if (!this.formAmount || this.formAmount <= 0) {
@@ -344,6 +430,7 @@ Arrow Instruments`;
     this.sendSubject = `Payment Reminder — ${this.companyName}`;
     this.sendBody = this.buildReminderBody();
     this.sendFiles = [];
+    this.sendAttachLedger = false;
     this.sendError = '';
     this.showSendModal = true;
   }
@@ -364,13 +451,43 @@ Arrow Instruments`;
       return;
     }
 
+    if (this.closingBalance === 0) {
+      this.zeroBalancePendingAction = 'send';
+      this.showZeroBalanceConfirm = true;
+      return;
+    }
+
+    this.doSendReminder();
+  }
+
+  cancelZeroBalanceConfirm(): void {
+    this.showZeroBalanceConfirm = false;
+    this.zeroBalancePendingAction = null;
+  }
+
+  confirmZeroBalanceAction(): void {
+    this.showZeroBalanceConfirm = false;
+    const action = this.zeroBalancePendingAction;
+    this.zeroBalancePendingAction = null;
+
+    if (action === 'schedule') {
+      this.doCreateSchedule();
+    } else {
+      this.doSendReminder();
+    }
+  }
+
+  private doSendReminder(): void {
     this.sendLoading = true;
     this.reminderService.sendReminder(this.companyId, {
       to: this.sendTo,
       cc: this.sendCc,
       subject: this.sendSubject.trim(),
       body: this.sendBody,
-      files: this.sendFiles
+      files: this.sendFiles,
+      attachLedgerStatement: this.sendAttachLedger,
+      ledgerStartDate: this.startDate,
+      ledgerEndDate: this.endDate
     }).subscribe({
       next: () => {
         this.sendLoading = false;
@@ -390,6 +507,7 @@ Arrow Instruments`;
     this.scheduleFrequency = 'monthly';
     this.scheduleStartDate = this.toDateString(new Date());
     this.scheduleEndDate = '';
+    this.scheduleSendTime = '09:00';
     this.scheduleTo = [];
     this.scheduleCc = [];
     this.scheduleToInput = '';
@@ -397,6 +515,7 @@ Arrow Instruments`;
     this.scheduleSubject = `Payment Reminder — ${this.companyName}`;
     this.scheduleBody = this.buildReminderBody();
     this.scheduleFiles = [];
+    this.scheduleAttachLedger = false;
     this.scheduleError = '';
     this.showScheduleModal = true;
     this.loadSchedules();
@@ -435,6 +554,10 @@ Arrow Instruments`;
       this.scheduleError = 'End date cannot be before the start date.';
       return;
     }
+    if (!this.scheduleSendTime) {
+      this.scheduleError = 'Send time is required.';
+      return;
+    }
     if (!this.scheduleSubject.trim()) {
       this.scheduleError = 'Subject is required.';
       return;
@@ -444,11 +567,23 @@ Arrow Instruments`;
       return;
     }
 
+    if (this.closingBalance === 0) {
+      this.zeroBalancePendingAction = 'schedule';
+      this.showZeroBalanceConfirm = true;
+      return;
+    }
+
+    this.doCreateSchedule();
+  }
+
+  private doCreateSchedule(): void {
     this.scheduleLoading = true;
     this.reminderService.createSchedule(this.companyId, {
       frequency: this.scheduleFrequency,
       startDate: this.scheduleStartDate,
       endDate: this.scheduleEndDate || null,
+      sendTime: this.scheduleSendTime,
+      attachLedgerStatement: this.scheduleAttachLedger,
       to: this.scheduleTo,
       cc: this.scheduleCc,
       subject: this.scheduleSubject.trim(),
@@ -463,6 +598,7 @@ Arrow Instruments`;
         this.scheduleSubject = '';
         this.scheduleBody = '';
         this.scheduleFiles = [];
+        this.scheduleAttachLedger = false;
         this.loadSchedules();
       },
       error: (err) => {

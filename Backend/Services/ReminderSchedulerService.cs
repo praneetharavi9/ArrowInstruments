@@ -11,6 +11,10 @@ namespace Backend.Services
     {
         private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(30);
 
+        // Lower bound used when auto-attaching a ledger statement to a recurring
+        // reminder — a full running statement to date, not just a recent window.
+        private static readonly DateTime EarliestStatementDate = new DateTime(2000, 1, 1);
+
         private readonly IServiceProvider _services;
         private readonly ILogger<ReminderSchedulerService> _logger;
 
@@ -41,8 +45,12 @@ namespace Backend.Services
             using var scope = _services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var reminderService = scope.ServiceProvider.GetRequiredService<ReminderService>();
+            var documentService = scope.ServiceProvider.GetRequiredService<LedgerDocumentService>();
 
-            var now = DateTime.UtcNow;
+            // NextRunAt/SendTime are naive IST wall-clock values (see IndiaTime),
+            // so "now" must be expressed the same way, not as true UTC — otherwise
+            // a schedule can look overdue (or not-yet-due) by up to 5.5 hours.
+            var now = IndiaTime.NowAsIst;
             var due = await context.ReminderSchedules
                 .Include(r => r.Attachments)
                 .Where(r => r.IsActive && r.NextRunAt <= now)
@@ -75,6 +83,17 @@ namespace Backend.Services
                         });
                     }
 
+                    if (schedule.AttachLedgerStatement)
+                    {
+                        var statement = await documentService.BuildStatementDataAsync(schedule.CompanyId, EarliestStatementDate, now.Date);
+                        attachments.Add(new ReminderAttachmentData
+                        {
+                            FileName = $"{statement.CustomerName} Ledger Statement.pdf",
+                            ContentType = "application/pdf",
+                            Bytes = documentService.BuildPdf(statement)
+                        });
+                    }
+
                     await reminderService.SendAsync(to, cc, schedule.Subject, schedule.Body, attachments);
 
                     schedule.LastSentAt = now;
@@ -100,10 +119,14 @@ namespace Backend.Services
             await context.SaveChangesAsync(ct);
         }
 
-        private static DateTime ComputeNextRun(DateTime from, string frequency)
+        // Internal (not private) so RemindersController can reuse it to roll a
+        // brand-new schedule's first NextRunAt forward if it's already due the
+        // moment it's created (e.g. the admin picked a time already in the past).
+        internal static DateTime ComputeNextRun(DateTime from, string frequency)
         {
             return frequency switch
             {
+                "daily" => from.AddDays(1),
                 "weekly" => from.AddDays(7),
                 "monthly" => from.AddMonths(1),
                 "yearly" => from.AddYears(1),

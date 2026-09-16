@@ -15,6 +15,19 @@
 <div *ngIf="!loading" class="stats-grid">
 
   <div class="stat-card">
+    <div class="stat-icon icon-gold">
+      <i class="fa-solid fa-indian-rupee-sign"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">₹{{ stats.totalBalance | number:'1.2-2' }}</div>
+      <div class="stat-label">Total Outstanding Balance</div>
+    </div>
+    <a routerLink="/admin/reports/customers" class="stat-link">
+      View accounts <i class="fa-solid fa-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="stat-card">
     <div class="stat-icon icon-blue">
       <i class="fa-solid fa-layer-group"></i>
     </div>

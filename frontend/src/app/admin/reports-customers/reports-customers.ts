@@ -14,6 +14,7 @@ export class ReportsCustomersComponent implements OnInit {
   loading = true;
   startDate = '';
   endDate = '';
+  nameSortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(
     private reportsService: AdminReportsService,
@@ -40,6 +41,7 @@ export class ReportsCustomersComponent implements OnInit {
     this.reportsService.getCustomerSummary(this.startDate, this.endDate).subscribe({
       next: (res) => {
         this.rows = res.rows;
+        this.sortRowsByName();
         this.loading = false;
       },
       error: () => {
@@ -53,6 +55,16 @@ export class ReportsCustomersComponent implements OnInit {
     this.startDate = range.start;
     this.endDate = range.end;
     this.loadData();
+  }
+
+  toggleNameSort(): void {
+    this.nameSortDirection = this.nameSortDirection === 'asc' ? 'desc' : 'asc';
+    this.sortRowsByName();
+  }
+
+  private sortRowsByName(): void {
+    const dir = this.nameSortDirection === 'asc' ? 1 : -1;
+    this.rows = [...this.rows].sort((a, b) => a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase()) * dir);
   }
 
   openDetail(row: CustomerSummaryRow): void {
