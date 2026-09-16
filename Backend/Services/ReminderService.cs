@@ -4,6 +4,7 @@ using FluentFTP;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
@@ -24,11 +25,13 @@ namespace Backend.Services
     {
         private readonly FtpSettings _ftpSettings;
         private readonly EmailSettings _emailSettings;
+        private readonly ILogger<ReminderService> _logger;
 
-        public ReminderService(IOptions<FtpSettings> ftpSettings, IOptions<EmailSettings> emailSettings)
+        public ReminderService(IOptions<FtpSettings> ftpSettings, IOptions<EmailSettings> emailSettings, ILogger<ReminderService> logger)
         {
             _ftpSettings = ftpSettings.Value;
             _emailSettings = emailSettings.Value;
+            _logger = logger;
         }
 
         // Uploads a file to the FTP "reminder attachments" folder and returns the
@@ -43,13 +46,21 @@ namespace Backend.Services
             await file.CopyToAsync(ms);
             ms.Position = 0;
 
-            using var ftp = CreateClient();
-            await ftp.Connect();
-            var status = await ftp.UploadStream(ms, remotePath, FtpRemoteExists.Overwrite, createRemoteDir: true);
-            await ftp.Disconnect();
+            try
+            {
+                using var ftp = CreateClient();
+                await ftp.Connect();
+                var status = await ftp.UploadStream(ms, remotePath, FtpRemoteExists.Overwrite, createRemoteDir: true);
+                await ftp.Disconnect();
 
-            if (status == FtpStatus.Failed)
-                throw new Exception($"FTP upload failed for '{file.FileName}'.");
+                if (status == FtpStatus.Failed)
+                    throw new Exception($"FTP upload failed for '{file.FileName}'.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "FTP upload failed for '{FileName}' to {RemotePath} on host {Host}", file.FileName, remotePath, _ftpSettings.Host);
+                throw;
+            }
 
             return storedFileName;
         }
@@ -58,16 +69,24 @@ namespace Backend.Services
         {
             var remotePath = _ftpSettings.ReminderAttachmentsPath.TrimEnd('/') + "/" + storedFileName;
 
-            using var ftp = CreateClient();
-            await ftp.Connect();
-            using var ms = new MemoryStream();
-            var ok = await ftp.DownloadStream(ms, remotePath);
-            await ftp.Disconnect();
+            try
+            {
+                using var ftp = CreateClient();
+                await ftp.Connect();
+                using var ms = new MemoryStream();
+                var ok = await ftp.DownloadStream(ms, remotePath);
+                await ftp.Disconnect();
 
-            if (!ok)
-                throw new Exception($"FTP download failed for '{storedFileName}'.");
+                if (!ok)
+                    throw new Exception($"FTP download failed for '{storedFileName}'.");
 
-            return ms.ToArray();
+                return ms.ToArray();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "FTP download failed for '{StoredFileName}' from {RemotePath} on host {Host}", storedFileName, remotePath, _ftpSettings.Host);
+                throw;
+            }
         }
 
         public async Task DeleteAttachmentAsync(string storedFileName)
@@ -80,9 +99,10 @@ namespace Backend.Services
                 await ftp.DeleteFile(remotePath);
                 await ftp.Disconnect();
             }
-            catch
+            catch (Exception ex)
             {
                 // Best-effort cleanup — a stray file left on the FTP server is harmless.
+                _logger.LogWarning(ex, "Best-effort FTP delete failed for '{StoredFileName}' at {RemotePath}", storedFileName, remotePath);
             }
         }
 
@@ -118,16 +138,32 @@ namespace Backend.Services
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
 
             using var smtp = new SmtpClient();
+            var stage = "connect";
             try
             {
+                _logger.LogInformation("SMTP: connecting to {Host}:{Port} to send '{Subject}' to {To}", _emailSettings.SmtpHost, _emailSettings.SmtpPort, subject, string.Join(", ", to));
                 await smtp.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.SslOnConnect, cts.Token);
+
+                stage = "authenticate";
                 await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass, cts.Token);
+
+                stage = "send";
                 await smtp.SendAsync(message, cts.Token);
+
+                stage = "disconnect";
                 await smtp.DisconnectAsync(true, cts.Token);
+
+                _logger.LogInformation("SMTP: sent '{Subject}' to {To}", subject, string.Join(", ", to));
             }
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
-                throw new TimeoutException("Timed out connecting to the SMTP server. Check the SMTP host/port and network access.");
+                _logger.LogError("SMTP: timed out during {Stage} against {Host}:{Port}", stage, _emailSettings.SmtpHost, _emailSettings.SmtpPort);
+                throw new TimeoutException($"Timed out during SMTP {stage}. Check the SMTP host/port and network access.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SMTP: failed during {Stage} against {Host}:{Port}", stage, _emailSettings.SmtpHost, _emailSettings.SmtpPort);
+                throw;
             }
         }
 

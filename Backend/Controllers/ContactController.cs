@@ -16,11 +16,13 @@ namespace Backend.Controllers
     {
         private readonly AppDbContext _context;
         private readonly EmailSettings _emailSettings;
+        private readonly ILogger<ContactController> _logger;
 
-        public ContactController(AppDbContext context, IOptions<EmailSettings> emailSettings)
+        public ContactController(AppDbContext context, IOptions<EmailSettings> emailSettings, ILogger<ContactController> logger)
         {
             _context = context;
             _emailSettings = emailSettings.Value;
+            _logger = logger;
         }
 
         // POST: api/contact
@@ -43,7 +45,7 @@ namespace Backend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Email failed: {ex.Message}");
+                _logger.LogError(ex, "Contact form email notification failed for submission from {Email}", submission.Email);
             }
 
             return Ok(new { message = "Thank you for your enquiry! We will get back to you shortly." });
@@ -105,15 +107,32 @@ namespace Backend.Controllers
             };
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(
-                _emailSettings.SmtpHost,
-                _emailSettings.SmtpPort,
-                SecureSocketOptions.SslOnConnect
-            );
-            await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass);
-            await smtp.SendAsync(notification);
-            await smtp.SendAsync(autoReply);
-            await smtp.DisconnectAsync(true);
+            var stage = "connect";
+            try
+            {
+                await smtp.ConnectAsync(
+                    _emailSettings.SmtpHost,
+                    _emailSettings.SmtpPort,
+                    SecureSocketOptions.SslOnConnect
+                );
+
+                stage = "authenticate";
+                await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass);
+
+                stage = "send notification";
+                await smtp.SendAsync(notification);
+
+                stage = "send auto-reply";
+                await smtp.SendAsync(autoReply);
+
+                stage = "disconnect";
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Contact form SMTP failed during {Stage} against {Host}:{Port}", stage, _emailSettings.SmtpHost, _emailSettings.SmtpPort);
+                throw;
+            }
         }
     }
 }

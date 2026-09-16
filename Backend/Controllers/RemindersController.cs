@@ -16,12 +16,14 @@ namespace Backend.Controllers
         private readonly AppDbContext _context;
         private readonly ReminderService _reminderService;
         private readonly LedgerDocumentService _documentService;
+        private readonly ILogger<RemindersController> _logger;
 
-        public RemindersController(AppDbContext context, ReminderService reminderService, LedgerDocumentService documentService)
+        public RemindersController(AppDbContext context, ReminderService reminderService, LedgerDocumentService documentService, ILogger<RemindersController> logger)
         {
             _context = context;
             _reminderService = reminderService;
             _documentService = documentService;
+            _logger = logger;
         }
 
         // POST: api/reminders/customers/5/send  (multipart/form-data — one-off email)
@@ -61,16 +63,24 @@ namespace Backend.Controllers
 
             if (form.AttachLedgerStatement)
             {
-                var today = DateTime.UtcNow.Date;
-                var ledgerStart = form.LedgerStartDate?.Date ?? new DateTime(today.Year, 1, 1);
-                var ledgerEnd = form.LedgerEndDate?.Date ?? today;
-                var statement = await _documentService.BuildStatementDataAsync(companyId, ledgerStart, ledgerEnd);
-                attachments.Add(new ReminderAttachmentData
+                try
                 {
-                    FileName = $"{company.CompanyName} Ledger Statement.pdf",
-                    ContentType = "application/pdf",
-                    Bytes = _documentService.BuildPdf(statement)
-                });
+                    var today = DateTime.UtcNow.Date;
+                    var ledgerStart = form.LedgerStartDate?.Date ?? new DateTime(today.Year, 1, 1);
+                    var ledgerEnd = form.LedgerEndDate?.Date ?? today;
+                    var statement = await _documentService.BuildStatementDataAsync(companyId, ledgerStart, ledgerEnd);
+                    attachments.Add(new ReminderAttachmentData
+                    {
+                        FileName = $"{company.CompanyName} Ledger Statement.pdf",
+                        ContentType = "application/pdf",
+                        Bytes = _documentService.BuildPdf(statement)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to build ledger statement attachment for company {CompanyId}", companyId);
+                    return StatusCode(500, new { success = false, message = $"Failed to build ledger statement: {ex.Message}" });
+                }
             }
 
             try
@@ -79,6 +89,7 @@ namespace Backend.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to send reminder email for company {CompanyId} to {To}", companyId, string.Join(", ", to));
                 return StatusCode(500, new { success = false, message = $"Failed to send email: {ex.Message}" });
             }
 
@@ -174,6 +185,7 @@ namespace Backend.Controllers
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, "Failed to upload reminder attachment {FileName} for company {CompanyId}", file.FileName, companyId);
                         return StatusCode(500, new { success = false, message = $"Attachment upload failed: {ex.Message}" });
                     }
 

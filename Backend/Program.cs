@@ -6,6 +6,7 @@ using Backend.Repository;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -178,6 +179,31 @@ var forwardedHeaderOptions = new ForwardedHeadersOptions
 forwardedHeaderOptions.KnownNetworks.Clear();
 forwardedHeaderOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeaderOptions);
+
+// Global exception handler — logs every unhandled exception from any current or
+// future controller/middleware (with method + path) to the app's logger, which
+// Railway captures from stdout, then returns a clean JSON 500 instead of the
+// default HTML error page. This is the app-wide safety net; specific endpoints
+// (e.g. reminder email sending) additionally log richer, stage-specific detail
+// of their own before their exceptions reach here.
+var isProductionForErrors = app.Environment.IsProduction();
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(exception, "Unhandled exception on {Method} {Path}", context.Request.Method, context.Request.Path);
+
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            success = false,
+            message = isProductionForErrors ? "An unexpected error occurred." : exception?.Message
+        });
+    });
+});
 
 // Swagger only outside Production — the production frontend is confirmed
 // working, so there's no more need to expose the full API schema publicly.
