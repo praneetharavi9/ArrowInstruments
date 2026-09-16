@@ -1,9 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription, timeout } from 'rxjs';
 import { AdminReportsService, CustomerLedgerRow, LedgerEntryPayload } from '../services/admin-reports.service';
 import { AdminCompanyService } from '../services/admin-company.service';
 import { AdminReminderService, ReminderFrequency, ReminderSchedule } from '../services/admin-reminder.service';
 import { ToastService } from '../services/toast.service';
+
+// Client-side ceiling on the send/schedule request so a stalled SMTP
+// connection surfaces as an error instead of leaving the button stuck
+// on "Sending..." indefinitely.
+const EMAIL_REQUEST_TIMEOUT_MS = 30000;
 
 @Component({
   selector: 'app-reports-customer-detail',
@@ -11,7 +17,7 @@ import { ToastService } from '../services/toast.service';
   templateUrl: './reports-customer-detail.html',
   styleUrl: './reports-customer-detail.css'
 })
-export class ReportsCustomerDetailComponent implements OnInit {
+export class ReportsCustomerDetailComponent implements OnInit, OnDestroy {
   companyId!: number;
   companyName = '';
   openingBalance = 0;
@@ -61,6 +67,7 @@ export class ReportsCustomerDetailComponent implements OnInit {
   sendAttachLedger = false;
   sendLoading = false;
   sendError = '';
+  private sendSub?: Subscription;
 
   // Zero-balance confirm (guards both the Send Email Reminder and Schedule Reminders modals)
   showZeroBalanceConfirm = false;
@@ -84,6 +91,7 @@ export class ReportsCustomerDetailComponent implements OnInit {
   scheduleError = '';
   schedules: ReminderSchedule[] = [];
   schedulesLoading = false;
+  private scheduleSub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -102,6 +110,11 @@ export class ReportsCustomerDetailComponent implements OnInit {
     this.endDate = qp.get('end') || this.toDateString(today);
     this.loadData();
     this.loadCompanyEmails();
+  }
+
+  ngOnDestroy(): void {
+    this.sendSub?.unsubscribe();
+    this.scheduleSub?.unsubscribe();
   }
 
   private loadCompanyEmails(): void {
@@ -423,6 +436,8 @@ Arrow Instruments`;
   // ───────────────────────────── Send Email Reminder modal ─────────────────────────────
 
   openSendReminder(): void {
+    this.sendSub?.unsubscribe();
+    this.sendLoading = false;
     this.sendTo = [];
     this.sendCc = [];
     this.sendToInput = '';
@@ -437,6 +452,8 @@ Arrow Instruments`;
 
   closeSendModal(): void {
     this.showSendModal = false;
+    this.sendSub?.unsubscribe();
+    this.sendLoading = false;
   }
 
   submitSendReminder(): void {
@@ -451,7 +468,7 @@ Arrow Instruments`;
       return;
     }
 
-    if (this.closingBalance === 0) {
+    if (this.closingBalance <= 0) {
       this.zeroBalancePendingAction = 'send';
       this.showZeroBalanceConfirm = true;
       return;
@@ -479,7 +496,8 @@ Arrow Instruments`;
 
   private doSendReminder(): void {
     this.sendLoading = true;
-    this.reminderService.sendReminder(this.companyId, {
+    this.sendSub?.unsubscribe();
+    this.sendSub = this.reminderService.sendReminder(this.companyId, {
       to: this.sendTo,
       cc: this.sendCc,
       subject: this.sendSubject.trim(),
@@ -488,7 +506,7 @@ Arrow Instruments`;
       attachLedgerStatement: this.sendAttachLedger,
       ledgerStartDate: this.startDate,
       ledgerEndDate: this.endDate
-    }).subscribe({
+    }).pipe(timeout(EMAIL_REQUEST_TIMEOUT_MS)).subscribe({
       next: () => {
         this.sendLoading = false;
         this.showSendModal = false;
@@ -496,7 +514,9 @@ Arrow Instruments`;
       },
       error: (err) => {
         this.sendLoading = false;
-        this.sendError = err?.error?.message || 'Failed to send email.';
+        this.sendError = err?.name === 'TimeoutError'
+          ? 'Sending the email is taking too long. Check the SMTP settings and try again.'
+          : err?.error?.message || 'Failed to send email.';
       }
     });
   }
@@ -504,6 +524,8 @@ Arrow Instruments`;
   // ───────────────────────────── Schedule Reminders modal ─────────────────────────────
 
   openScheduleReminders(): void {
+    this.scheduleSub?.unsubscribe();
+    this.scheduleLoading = false;
     this.scheduleFrequency = 'monthly';
     this.scheduleStartDate = this.toDateString(new Date());
     this.scheduleEndDate = '';
@@ -523,6 +545,8 @@ Arrow Instruments`;
 
   closeScheduleModal(): void {
     this.showScheduleModal = false;
+    this.scheduleSub?.unsubscribe();
+    this.scheduleLoading = false;
   }
 
   private loadSchedules(): void {
@@ -578,7 +602,8 @@ Arrow Instruments`;
 
   private doCreateSchedule(): void {
     this.scheduleLoading = true;
-    this.reminderService.createSchedule(this.companyId, {
+    this.scheduleSub?.unsubscribe();
+    this.scheduleSub = this.reminderService.createSchedule(this.companyId, {
       frequency: this.scheduleFrequency,
       startDate: this.scheduleStartDate,
       endDate: this.scheduleEndDate || null,
@@ -589,7 +614,7 @@ Arrow Instruments`;
       subject: this.scheduleSubject.trim(),
       body: this.scheduleBody,
       files: this.scheduleFiles
-    }).subscribe({
+    }).pipe(timeout(EMAIL_REQUEST_TIMEOUT_MS)).subscribe({
       next: () => {
         this.scheduleLoading = false;
         this.toastService.show('Reminder schedule created.', 'success');
@@ -603,7 +628,9 @@ Arrow Instruments`;
       },
       error: (err) => {
         this.scheduleLoading = false;
-        this.scheduleError = err?.error?.message || 'Failed to create reminder schedule.';
+        this.scheduleError = err?.name === 'TimeoutError'
+          ? 'Creating the schedule is taking too long. Check the FTP/SMTP settings and try again.'
+          : err?.error?.message || 'Failed to create reminder schedule.';
       }
     });
   }

@@ -111,8 +111,15 @@ namespace Backend.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to send reminder schedule {Id}", schedule.Id);
-                    // Back off a day so a persistent failure doesn't retry every 30 minutes.
-                    schedule.NextRunAt = now.AddDays(1);
+                    // Back off a day so a persistent failure doesn't retry every 30
+                    // minutes — but keep the schedule's configured send time (not
+                    // "now"), otherwise a failure at, say, 1:22 AM during a poll
+                    // tick permanently knocks the schedule off its intended
+                    // 9:00 PM slot instead of just delaying it by a day.
+                    schedule.NextRunAt = now.Date.AddDays(1).Add(schedule.SendTime);
+
+                    if (schedule.EndDate != null && schedule.NextRunAt.Date > schedule.EndDate.Value.Date)
+                        schedule.IsActive = false;
                 }
             }
 

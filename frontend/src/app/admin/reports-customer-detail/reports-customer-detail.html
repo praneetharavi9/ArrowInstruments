@@ -465,12 +465,12 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title text-danger">
-          <i class="fa-solid fa-triangle-exclamation me-2"></i>Outstanding Balance is Zero
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>Outstanding Balance is Zero or less than Zero
         </h5>
       </div>
       <div class="modal-body">
-        <p *ngIf="showScheduleModal">This customer's outstanding balance is ₹0.00. Are you sure you want to schedule recurring payment reminders anyway?</p>
-        <p *ngIf="!showScheduleModal">This customer's outstanding balance is ₹0.00. Are you sure you want to send a payment reminder anyway?</p>
+        <p *ngIf="showScheduleModal">This customer's outstanding balance is ₹{{ closingBalance | number:'1.2-2' }}. Are you sure you want to schedule recurring payment reminders anyway?</p>
+        <p *ngIf="!showScheduleModal">This customer's outstanding balance is ₹{{ closingBalance | number:'1.2-2' }}. Are you sure you want to send a payment reminder anyway?</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="cancelZeroBalanceConfirm()">Cancel</button>

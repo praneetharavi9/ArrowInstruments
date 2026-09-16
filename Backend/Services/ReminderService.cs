@@ -111,11 +111,24 @@ namespace Backend.Services
 
             message.Body = bodyBuilder.ToMessageBody();
 
+            // MailKit's per-operation default (100s) can let a stalled/unreachable
+            // SMTP host drag a single send out past several minutes across
+            // Connect+Authenticate+Send. Bound the whole exchange instead so a bad
+            // connection fails fast with a clear error.
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.SslOnConnect);
-            await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass);
-            await smtp.SendAsync(message);
-            await smtp.DisconnectAsync(true);
+            try
+            {
+                await smtp.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.SslOnConnect, cts.Token);
+                await smtp.AuthenticateAsync(_emailSettings.SmtpUser, _emailSettings.SmtpPass, cts.Token);
+                await smtp.SendAsync(message, cts.Token);
+                await smtp.DisconnectAsync(true, cts.Token);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested)
+            {
+                throw new TimeoutException("Timed out connecting to the SMTP server. Check the SMTP host/port and network access.");
+            }
         }
 
         // The body is composer-typed plain text (with real line breaks), not HTML.

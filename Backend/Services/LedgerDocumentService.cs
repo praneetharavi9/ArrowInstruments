@@ -119,10 +119,9 @@ namespace Backend.Services
             };
         }
 
-        private static string FinancialYearLabel(DateTime start)
+        private static string PeriodLabel(DateTime start, DateTime end)
         {
-            var fyStartYear = start.Month >= 4 ? start.Year : start.Year - 1;
-            return $"{fyStartYear}-{fyStartYear + 1}";
+            return $"{start:dd-MMM-yyyy} to {end:dd-MMM-yyyy}";
         }
 
         // ───────────────────────────── Excel ─────────────────────────────
@@ -142,7 +141,7 @@ namespace Backend.Services
             r = WriteLetterhead(ws, data.Profile, r);
 
             ws.Cell(r, 1).Value = "TO,";
-            ws.Cell(r, 7).Value = FinancialYearLabel(data.StartDate);
+            ws.Cell(r, 7).Value = PeriodLabel(data.StartDate, data.EndDate);
             ws.Cell(r, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
             r++;
             ws.Cell(r, 1).Value = data.CustomerName;
@@ -271,7 +270,7 @@ namespace Backend.Services
                         col.Item().PaddingTop(10).Row(row =>
                         {
                             row.RelativeItem().Text("TO,").Bold();
-                            row.RelativeItem().AlignRight().Text(FinancialYearLabel(data.StartDate)).Bold();
+                            row.RelativeItem().AlignRight().Text(PeriodLabel(data.StartDate, data.EndDate)).Bold();
                         });
                         col.Item().Text(data.CustomerName).Bold();
                     });

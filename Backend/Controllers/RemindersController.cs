@@ -61,8 +61,9 @@ namespace Backend.Controllers
 
             if (form.AttachLedgerStatement)
             {
-                var ledgerStart = form.LedgerStartDate?.Date ?? new DateTime(company.DateCreated.Year, 1, 1);
-                var ledgerEnd = form.LedgerEndDate?.Date ?? DateTime.UtcNow.Date;
+                var today = DateTime.UtcNow.Date;
+                var ledgerStart = form.LedgerStartDate?.Date ?? new DateTime(today.Year, 1, 1);
+                var ledgerEnd = form.LedgerEndDate?.Date ?? today;
                 var statement = await _documentService.BuildStatementDataAsync(companyId, ledgerStart, ledgerEnd);
                 attachments.Add(new ReminderAttachmentData
                 {
